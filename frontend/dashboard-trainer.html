@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trainer Dashboard - FitForge</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<style>
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0a0a0a;
+    color: white;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+}
+
+.header h2 {
+    color: #c6ff00;
+}
+
+.logout {
+    color: red;
+    cursor: pointer;
+}
+
+.profile {
+    background: #161616;
+    margin: 20px 40px;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+}
+
+.status {
+    background: #c6ff00;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+
+.container {
+    padding: 20px 40px;
+}
+
+.user-card {
+    background: #161616;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+button {
+    padding: 6px 12px;
+    margin-top: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.chat-btn-table {
+    background: #c6ff00;
+    color: black;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    display: block;
+    margin: auto;
+}
+
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #333;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <h2>FitForge Trainer</h2>
+    <p class="logout">Logout</p>
+</div>
+
+<div class="profile">
+    <div class="profile-left">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Trainer">
+        <div>
+            <p id="trainerName">Trainer</p>
+            <p id="trainerId">ID</p>
+        </div>
+        <canvas id="qrCode"></canvas>
+    </div>
+    <div id="status" class="status">Active</div>
+</div>
+
+<div class="container" id="pendingContainer"></div>
+
+<div class="container" id="tableContainer"></div>
+<script src="js/trainer.js"></script>
+</body>
+</html>
