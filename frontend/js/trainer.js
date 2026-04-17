@@ -1,61 +1,118 @@
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+const API_BASE = "http://localhost:5001";
+const socket = io(API_BASE);
+
+if (!token) {
+    window.location.href = "login.html";
+}
+
+if (role !== "trainer") {
+    alert("Access Denied");
+    window.location.href = "login.html";
+}
+
+const storedTrainer = JSON.parse(localStorage.getItem("user"));
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+function attachLogout() {
+    document.querySelectorAll(".logout").forEach((element) => {
+        element.addEventListener("click", logout);
+    });
+}
+
 const trainer = {
-    _id: "TR123",
-    name: "Coach Aman",
-    status: "Active"
+    _id: storedTrainer?._id || storedTrainer?.id || "TR123",
+    name: storedTrainer?.name || "Coach Aman",
+    email: storedTrainer?.email || "trainer@example.com",
+    status: storedTrainer?.status || "Active"
 };
 
-const allUsers = [
-    { name: "Himesh", height: 170, weight: 72 },
-    { name: "Rahul", height: 175, weight: 80 }
-];
+let allUsers = [];
+const openChats = new Map();
 
-let pendingUsers = [
-    { name: "Himesh", pendingWeight: 73 },
-    { name: "Rahul", pendingWeight: 78 }
-];
+if (trainer._id) {
+    socket.emit("joinRoom", trainer._id);
+}
+
 document.getElementById("trainerName").innerText = trainer.name;
-document.getElementById("trainerId").innerText = trainer._id;
+document.getElementById("trainerId").innerText = trainer.email;
 document.getElementById("status").innerText = trainer.status;
 
-QRCode.toCanvas(document.getElementById("qrCode"), trainer._id);
+QRCode.toCanvas(document.getElementById("qrCode"), trainer.email);
+
 const pendingContainer = document.getElementById("pendingContainer");
 
+// ✅ FIXED PENDING (from DB instead of dummy)
 function renderPending() {
     pendingContainer.innerHTML = "<h3>Pending Requests</h3>";
 
-    pendingUsers.forEach((u, i) => {
+    const pending = allUsers.filter(u => u.pendingRequest);
+
+    if (!pending.length) {
+        pendingContainer.innerHTML += `
+            <div class="user-card">
+                <p>No pending requests right now.</p>
+            </div>
+        `;
+        return;
+    }
+
+    pending.forEach((u) => {
         const div = document.createElement("div");
         div.className = "user-card";
 
         div.innerHTML = `
-            <p>${u.name} → ${u.pendingWeight} kg</p>
-            <button onclick="approveWeight(${i})" style="background:#c6ff00;">
-                Approve
-            </button>
-            <button onclick="rejectWeight(${i})" style="background:red;color:white;">
-                Reject
-            </button>
+            <p>${u.name} → ${u.pendingRequest.weight} kg</p>
+            <button onclick="approveWeight('${u._id}')">Approve</button>
+            <button onclick="rejectWeight('${u._id}')">Reject</button>
         `;
 
         pendingContainer.appendChild(div);
     });
 }
 
-function approveWeight(i) {
-    alert("Approved for " + pendingUsers[i].name);
-    pendingUsers.splice(i, 1);
-    renderPending();
+async function approveWeight(userId) {
+    await fetch(`${API_BASE}/api/trainer/approve/${userId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",   // ✅ ADD THIS
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    loadTrainerUsers();
 }
 
-function rejectWeight(i) {
-    alert("Rejected for " + pendingUsers[i].name);
-    pendingUsers.splice(i, 1);
-    renderPending();
+async function rejectWeight(userId) {
+    await fetch(`${API_BASE}/api/trainer/reject/${userId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",   // ✅ ADD THIS
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    loadTrainerUsers();
 }
 
 const tableContainer = document.getElementById("tableContainer");
 
 function renderUsersTable() {
+    if (!allUsers.length) {
+        tableContainer.innerHTML = `
+            <h3>Users Details & Chat</h3>
+            <div class="user-card">
+                <p>No users found.</p>
+            </div>
+        `;
+        return;
+    }
+
     tableContainer.innerHTML = `
         <h3>Users Details & Chat</h3>
 
@@ -99,40 +156,140 @@ function renderUsersTable() {
     `;
 }
 
+function renderUsersLoading() {
+    tableContainer.innerHTML = `
+        <h3>Users Details & Chat</h3>
+        <div class="user-card">
+            <p>Loading users...</p>
+        </div>
+    `;
+}
+
+function renderUsersError(message = "Failed to load users.") {
+    tableContainer.innerHTML = `
+        <h3>Users Details & Chat</h3>
+        <div class="user-card">
+            <p>${message}</p>
+        </div>
+    `;
+}
+
 function toggleUserChat(i) {
     const row = document.getElementById(`chat-${i}`);
-    row.style.display = row.style.display === "none" ? "table-row" : "none";
+    const isOpening = row.style.display === "none";
+    row.style.display = isOpening ? "table-row" : "none";
+
+    if (isOpening) {
+        loadTrainerChatHistory(i);
+    }
 }
 
 function sendUserMessage(i) {
     const input = document.getElementById(`input-${i}`);
-    const box = document.getElementById(`messages-${i}`);
+    const text = input.value.trim();
+    const chatUser = allUsers[i];
 
-    if (!input.value.trim()) return;
+    if (!text || !chatUser?._id || !trainer._id) return;
 
-    const msg = document.createElement("div");
-    msg.innerHTML = `<b>You:</b> ${input.value}`;
-    msg.style.textAlign = "left";
-    msg.style.background = "#c6ff00";
-    msg.style.color = "black";
-    msg.style.margin = "5px";
-    msg.style.padding = "5px";
+    appendTrainerMessage(i, {
+        sender: trainer._id,
+        message: text
+    });
 
-    box.appendChild(msg);
+    socket.emit("sendMessage", {
+        sender: trainer._id,
+        receiver: chatUser._id,
+        message: text
+    });
 
-    const text = input.value;
     input.value = "";
-
-    setTimeout(() => {
-        const reply = document.createElement("div");
-        reply.innerHTML = `<b>${allUsers[i].name}:</b> Got it!`;
-        reply.style.background = "#222";
-        reply.style.margin = "5px";
-        reply.style.padding = "5px";
-
-        box.appendChild(reply);
-    }, 1000);
 }
 
-renderPending();
-renderUsersTable();
+attachLogout();
+renderUsersLoading();
+loadTrainerUsers();
+
+socket.on("receiveMessage", (data) => {
+    if (!data || String(data.sender) === String(trainer._id)) return;
+
+    const chatIndex = allUsers.findIndex(
+        (chatUser) => String(chatUser._id) === String(data.sender)
+    );
+
+    if (chatIndex === -1) return;
+
+    appendTrainerMessage(chatIndex, data);
+});
+
+function appendTrainerMessage(index, data) {
+    const box = document.getElementById(`messages-${index}`);
+    if (!box) return;
+
+    const isYou = String(data.sender) === String(trainer._id);
+
+    const messageDiv = document.createElement("div");
+
+    messageDiv.style.textAlign = isYou ? "right" : "left";
+    messageDiv.style.background = isYou ? "#c6ff00" : "#222";
+    messageDiv.style.color = isYou ? "black" : "white";
+    messageDiv.style.margin = "5px";
+    messageDiv.style.padding = "5px";
+
+    messageDiv.innerHTML = `
+        <b>${isYou ? "You" : allUsers[index]?.name}:</b> ${data.message}
+    `;
+
+    box.appendChild(messageDiv);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function loadTrainerUsers() {
+    try {
+        // ✅ FIXED API
+        const res = await fetch(`${API_BASE}/api/trainer/users`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const users = await res.json();
+
+        if (!res.ok) {
+            renderUsersError(users.msg || "Failed to load users.");
+            return;
+        }
+
+        allUsers = users;
+
+        renderUsersTable();
+        renderPending(); // ✅ IMPORTANT FIX
+
+    } catch (err) {
+        console.error("Load trainer users error:", err);
+        renderUsersError("Could not connect to backend.");
+    }
+}
+
+async function loadTrainerChatHistory(index) {
+    const chatUser = allUsers[index];
+    if (!chatUser?._id) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/chat/${chatUser._id}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const messages = await res.json();
+
+        if (!res.ok) return;
+
+        const box = document.getElementById(`messages-${index}`);
+        box.innerHTML = "";
+
+        messages.forEach((msg) => appendTrainerMessage(index, msg));
+    } catch (err) {
+        console.error("Chat load error:", err);
+    }
+}

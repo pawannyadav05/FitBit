@@ -1,7 +1,11 @@
+const API_BASE = "http://localhost:5001";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 const storedUser = JSON.parse(localStorage.getItem("user"));
 const user = storedUser || {};
+const socket = io(API_BASE);
+let activeTrainer = null;
+let hasLoadedChatHistory = false;
 
 if (!token) {
     window.location.href = "login.html";
@@ -10,6 +14,10 @@ if (!token) {
 if (role !== "user") {
     alert("Access Denied");
     window.location.href = "login.html";
+}
+
+if (user._id) {
+    socket.emit("joinRoom", user._id);
 }
 
 function logout() {
@@ -60,37 +68,122 @@ function loadUser() {
 
 function toggleChat() {
     const chat = document.getElementById("chatBox");
-    chat.style.display = chat.style.display === "flex" ? "none" : "flex";
+    const isOpening = chat.style.display !== "flex";
+    chat.style.display = isOpening ? "flex" : "none";
+
+    if (isOpening && !activeTrainer) {
+        const box = document.getElementById("chatMessages");
+        box.innerHTML = `<div style="background:#222;color:white;">No trainer is available for chat right now.</div>`;
+        return;
+    }
+
+    if (isOpening && activeTrainer && !hasLoadedChatHistory) {
+        loadChatHistory(activeTrainer._id);
+    }
 }
 
 function sendMessage() {
     const input = document.getElementById("chatInput");
-    const box = document.getElementById("chatMessages");
+    const text = input.value.trim();
 
-    if (!input.value.trim()) return;
+    if (!text) {
+        return;
+    }
 
-    const msgDiv = document.createElement("div");
-    msgDiv.style.background = "#c6ff00";
-    msgDiv.style.color = "black";
-    msgDiv.innerHTML = `<b>You:</b> ${input.value}`;
+    if (!activeTrainer?._id) {
+        alert("No trainer is available for chat right now.");
+        return;
+    }
 
-    box.appendChild(msgDiv);
-    box.scrollTop = box.scrollHeight;
+    if (!user._id) {
+        alert("User session is missing. Please log in again.");
+        return;
+    }
 
-    const val = input.value;
+    appendUserMessage({
+        sender: user._id,
+        message: text
+    });
+
+    socket.emit("sendMessage", {
+        sender: user._id,
+        receiver: activeTrainer._id,
+        message: text
+    });
+
     input.value = "";
-
-    setTimeout(() => {
-        const reply = document.createElement("div");
-        reply.style.background = "#222";
-        reply.innerHTML = `<b>Trainer:</b> ${val} noted. Keep going 💪`;
-        box.appendChild(reply);
-        box.scrollTop = box.scrollHeight;
-    }, 1000);
 }
 
 attachLogout();
 loadUser();
+loadTrainer();
+
+socket.on("receiveMessage", (data) => {
+    if (!data || data.sender === user._id) {
+        return;
+    }
+
+    appendUserMessage(data);
+});
+
+function appendUserMessage(data) {
+    const box = document.getElementById("chatMessages");
+    const messageDiv = document.createElement("div");
+    const isYou = String(data.sender) === String(user._id);
+
+    messageDiv.style.alignSelf = isYou ? "flex-end" : "flex-start";
+    messageDiv.style.background = isYou ? "#c6ff00" : "#222";
+    messageDiv.style.color = isYou ? "black" : "white";
+    messageDiv.innerHTML = `<b>${isYou ? "You" : activeTrainer?.name || "Trainer"}:</b> ${data.message}`;
+
+    box.appendChild(messageDiv);
+    box.scrollTop = box.scrollHeight;
+}
+
+async function loadTrainer() {
+    try {
+        const res = await fetch(`${API_BASE}/api/chat/trainers`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const trainers = await res.json();
+
+        if (!res.ok || !trainers.length) {
+            activeTrainer = null;
+            return;
+        }
+
+        activeTrainer = trainers[0];
+    } catch (err) {
+        console.error("Load trainer error:", err);
+        activeTrainer = null;
+    }
+}
+
+async function loadChatHistory(receiverId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/chat/${receiverId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const messages = await res.json();
+
+        if (!res.ok) {
+            return;
+        }
+
+        const box = document.getElementById("chatMessages");
+        box.innerHTML = "";
+        messages.forEach(appendUserMessage);
+        hasLoadedChatHistory = true;
+    } catch (err) {
+        console.error("Load chat history error:", err);
+    }
+}
 
 async function requestUpdate() {
     const newWeight = Number(document.getElementById("newWeight").value);
