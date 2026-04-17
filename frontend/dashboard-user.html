@@ -262,7 +262,7 @@ body {
     <div class="profile">
         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=User">
         <p id="userName">User Name</p>
-        <p id="userId">ID</p>
+        <p id="userId">Email</p>
         <div id="membershipStatus" class="status">Active</div>
         
         <br>
@@ -281,6 +281,14 @@ body {
 
         <div class="progress-bar">
             <div id="progressBar" class="progress"></div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+        <h3>Request Update</h3>
+        <div class="chat-input" style="padding: 0; background: transparent; border-top: none; flex-direction: column; gap: 12px;">
+            <input id="newWeight" type="number" placeholder="New Weight (kg)" min="1">
+            <button onclick="requestUpdate()" style="margin-left: 0; padding: 14px 18px;">Send Request</button>
         </div>
     </div>
 </div>

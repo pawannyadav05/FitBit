@@ -1,44 +1,61 @@
-const BASE_URL = "http://localhost:5000";
-
 const token = localStorage.getItem("token");
+const role = localStorage.getItem("role");
+const storedUser = JSON.parse(localStorage.getItem("user"));
+const user = storedUser || {};
 
-const user = {
-    _id: "FF123",
-    name: "Himesh",
-    height: null,
-    currentWeight: null,
-    targetWeight: null,
-    membershipStatus: "Active",
-    streak: 10
-};
+if (!token) {
+    window.location.href = "login.html";
+}
+
+if (role !== "user") {
+    alert("Access Denied");
+    window.location.href = "login.html";
+}
+
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+function attachLogout() {
+    document.querySelectorAll(".logout").forEach((element) => {
+        element.addEventListener("click", logout);
+    });
+}
 
 function loadUser() {
-    document.getElementById("userName").innerText = user.name;
-    document.getElementById("userId").innerText = user._id;
-    document.getElementById("membershipStatus").innerText = user.membershipStatus;
-    QRCode.toCanvas(document.getElementById("qrCode"), user._id);
+    const userName = user.name || "User";
+    const userEmail = user.email || "No email";
+    const membershipStatus = user.membershipStatus || "Active";
+    const height = user.height ?? null;
+    const currentWeight = user.weight ?? user.currentWeight ?? null;
+    const targetWeight = user.goalWeight ?? user.targetWeight ?? null;
+    const streak = user.streak ?? 0;
 
-    if (!user.height || !user.currentWeight || !user.targetWeight) {
-        document.querySelector(".card").innerHTML = `
-            <h3>Complete Your Profile</h3>
-            <input id="heightInput" type="number" placeholder="Height (cm)">
-            <input id="weightInput" type="number" placeholder="Current Weight (kg)">
-            <input id="targetInput" type="number" placeholder="Target Weight (kg)">
-            <button onclick="saveProfile()">Save</button>
-        `;
-        return;
+    document.getElementById("userName").innerText = userName;
+    document.getElementById("userId").innerText = userEmail;
+    document.getElementById("membershipStatus").innerText = membershipStatus;
+
+    QRCode.toCanvas(document.getElementById("qrCode"), userEmail);
+
+    document.getElementById("height").innerText = height ?? "Not set";
+    document.getElementById("weight").innerText = currentWeight ?? "Not set";
+    document.getElementById("goal").innerText = targetWeight ?? "Not set";
+    document.getElementById("streak").innerText = streak;
+
+    if (height && currentWeight) {
+        const bmi = (currentWeight / ((height / 100) ** 2)).toFixed(2);
+        document.getElementById("bmi").innerText = bmi;
+    } else {
+        document.getElementById("bmi").innerText = "Not set";
     }
 
-    document.getElementById("height").innerText = user.height;
-    document.getElementById("weight").innerText = user.currentWeight;
-    document.getElementById("goal").innerText = user.targetWeight;
-    document.getElementById("streak").innerText = user.streak;
-
-    const bmi = (user.currentWeight / ((user.height / 100) ** 2)).toFixed(2);
-    document.getElementById("bmi").innerText = bmi;
-
-    const progress = ((user.currentWeight / user.targetWeight) * 100);
-    document.getElementById("progressBar").style.width = progress + "%";
+    if (currentWeight && targetWeight) {
+        const progress = Math.min((currentWeight / targetWeight) * 100, 100);
+        document.getElementById("progressBar").style.width = progress + "%";
+    } else {
+        document.getElementById("progressBar").style.width = "0%";
+    }
 }
 
 function toggleChat() {
@@ -72,4 +89,40 @@ function sendMessage() {
     }, 1000);
 }
 
+attachLogout();
 loadUser();
+
+async function requestUpdate() {
+    const newWeight = Number(document.getElementById("newWeight").value);
+
+    if (newWeight <= 0) {
+        alert("Enter a valid positive weight.");
+        return;
+    }
+
+    try {
+        const res = await fetch("http://localhost:5001/api/user/request-update", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                weight: newWeight
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert(data.msg || "Failed to send request.");
+            return;
+        }
+
+        alert("Weight update request sent successfully.");
+        document.getElementById("newWeight").value = "";
+    } catch (err) {
+        console.error("Request update error:", err);
+        alert("Server error. Please try again.");
+    }
+}
