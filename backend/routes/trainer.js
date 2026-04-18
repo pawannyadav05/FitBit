@@ -13,24 +13,42 @@ router.get("/users", async (req, res) => {
 });
 
 router.post("/approve/:id", async (req, res) => {
-    const user = await User.findById(req.params.id);
+    try {
+        const user = await User.findById(req.params.id);
 
-    if (user.pendingRequest) {
-        user.weight = user.pendingRequest.weight;
-        user.pendingRequest = null;
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        if (user.pendingRequest) {
+            user.weight = user.pendingRequest.weight;
+            user.pendingRequest = null;
+        }
+
+        await user.save();
+        res.json({ msg: "Approved" });
+    } catch (err) {
+        console.error("Approve user error:", err);
+        res.status(500).json({ msg: "Server error" });
     }
-
-    await user.save();
-    res.json({ msg: "Approved" });
 });
 
 router.post("/reject/:id", async (req, res) => {
-    const user = await User.findById(req.params.id);
+    try {
+        const user = await User.findById(req.params.id);
 
-    user.pendingRequest = null;
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
 
-    await user.save();
-    res.json({ msg: "Rejected" });
+        user.pendingRequest = null;
+
+        await user.save();
+        res.json({ msg: "Rejected" });
+    } catch (err) {
+        console.error("Reject user error:", err);
+        res.status(500).json({ msg: "Server error" });
+    }
 });
 
 export default router;
