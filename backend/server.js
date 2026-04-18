@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/user.js";
 import chatRoutes from "./routes/chat.js";
 import trainerRoutes from "./routes/trainer.js";
+import adminRoutes from "./routes/admin.js";
 import Message from "./models/Message.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +41,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/trainer", trainerRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
     res.send("API Running...");

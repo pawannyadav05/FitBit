@@ -18,7 +18,12 @@ const userSchema=new mongoose.Schema({
     },
     weight: {
         type: Number,
-        required: true
+        required: function() { return this.role === 'user'; }
+    },
+    trainer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null
     },
     goalWeight: {
         type: Number

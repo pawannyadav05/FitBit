@@ -1,5 +1,6 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
+const API_BASE = "http://localhost:5001";
 
 if (!token) {
     window.location.href = "login.html";
@@ -21,17 +22,39 @@ function attachLogout() {
     });
 }
 
-// Dummy Users
-let users = [
-    { id: "U1", name: "Himesh", trainer: null },
-    { id: "U2", name: "Rahul", trainer: null }
-];
+// 🔥 REAL DATA ARRAYS
+let users = [];
+let trainers = [];
 
-// Dummy Trainers
-let trainers = [
-    { id: "T1", name: "Aman" },
-    { id: "T2", name: "Rohit" }
-];
+// =====================
+// FETCH DATA
+// =====================
+async function loadData() {
+    try {
+        // users
+        const resUsers = await fetch(`${API_BASE}/api/admin/users`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const userData = await resUsers.json();
+        if (resUsers.ok) users = userData;
+
+        // trainers
+        const resTrainers = await fetch(`${API_BASE}/api/admin/trainers`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const trainerData = await resTrainers.json();
+        if (resTrainers.ok) trainers = trainerData;
+
+        renderUsers();
+        renderTrainers();
+
+    } catch (err) {
+        console.error(err);
+        alert("Error loading data");
+    }
+}
 
 // =====================
 // USERS TABLE
@@ -51,21 +74,21 @@ function renderUsers() {
             <tr>
                 <td>${u.name}</td>
 
-                <td>${u.trainer ? u.trainer : "Not Assigned"}</td>
+                <td>${u.trainer || "Not Assigned"}</td>
 
                 <td>
                     <select id="trainer-${i}">
                         <option value="">Select</option>
-                        ${trainers.map(t => `<option value="${t.name}">${t.name}</option>`).join("")}
+                        ${trainers.map(t => `<option value="${t._id}">${t.name}</option>`).join("")}
                     </select>
 
-                    <button class="assign-btn" onclick="assignTrainer(${i})">
+                    <button onclick="assignTrainer('${u._id}', ${i})">
                         Assign
                     </button>
                 </td>
 
                 <td>
-                    <button class="delete-btn" onclick="deleteUser(${i})">
+                    <button onclick="deleteUser('${u._id}')">
                         Delete
                     </button>
                 </td>
@@ -74,27 +97,63 @@ function renderUsers() {
     `;
 }
 
-// Assign Trainer
-function assignTrainer(i) {
-    const select = document.getElementById(`trainer-${i}`);
-    const trainer = select.value;
+// =====================
+// ASSIGN TRAINER
+// =====================
+async function assignTrainer(userId, i) {
+    const trainerId = document.getElementById(`trainer-${i}`).value;
 
-    if (!trainer) {
+    if (!trainerId) {
         alert("Select trainer first");
         return;
     }
 
-    users[i].trainer = trainer;
-
-    alert(`Assigned ${trainer} to ${users[i].name}`);
-
-    renderUsers(); // refresh UI
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/assign`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ userId, trainerId })
+        });
+        
+        if (res.ok) {
+            loadData();
+        } else {
+            const data = await res.json();
+            alert(data.msg || "Failed to assign trainer");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error assigning trainer");
+    }
 }
 
-// Delete User
-function deleteUser(i) {
-    users.splice(i, 1);
-    renderUsers();
+// =====================
+// DELETE USER
+// =====================
+async function deleteUser(userId) {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/delete-user/${userId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.ok) {
+            loadData();
+        } else {
+            const data = await res.json();
+            alert(data.msg || "Failed to delete user");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error deleting user");
+    }
 }
 
 // =====================
@@ -109,11 +168,11 @@ function renderTrainers() {
             <th>Delete</th>
         </tr>
 
-        ${trainers.map((t, i) => `
+        ${trainers.map((t) => `
             <tr>
                 <td>${t.name}</td>
                 <td>
-                    <button class="delete-btn" onclick="deleteTrainer(${i})">
+                    <button onclick="deleteTrainer('${t._id}')">
                         Delete
                     </button>
                 </td>
@@ -121,6 +180,10 @@ function renderTrainers() {
         `).join("")}
     `;
 }
+
+// =====================
+// CREATE TRAINER
+// =====================
 function createTrainer() {
     const name = document.getElementById("trainerNameInput").value;
     const email = document.getElementById("trainerEmailInput").value;
@@ -131,31 +194,58 @@ function createTrainer() {
         return;
     }
 
-    // 🔥 Send to backend (REAL WAY)
-    fetch("http://localhost:5000/api/admin/create-trainer", {
+    fetch(`${API_BASE}/api/admin/create-trainer`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ name, email, password })
     })
-    .then(res => res.json())
-    .then(data => {
+    .then(async (res) => {
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.msg || "Failed to create trainer");
+            return;
+        }
         alert("Trainer created!");
-        renderTrainers();
+        document.getElementById("trainerNameInput").value = "";
+        document.getElementById("trainerEmailInput").value = "";
+        document.getElementById("trainerPasswordInput").value = "";
+        loadData();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error creating trainer");
     });
-
-    document.getElementById("trainerNameInput").value = "";
-    document.getElementById("trainerEmailInput").value = "";
-    document.getElementById("trainerPasswordInput").value = "";
 }
-// Delete Trainer
-function deleteTrainer(i) {
-    trainers.splice(i, 1);
-    renderTrainers();
+
+// =====================
+// DELETE TRAINER
+// =====================
+async function deleteTrainer(trainerId) {
+    if (!confirm("Are you sure you want to delete this trainer?")) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/admin/delete-trainer/${trainerId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.ok) {
+            loadData();
+        } else {
+            const data = await res.json();
+            alert(data.msg || "Failed to delete trainer");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error deleting trainer");
+    }
 }
 
 // INIT
 attachLogout();
-renderUsers();
-renderTrainers();
+loadData();
