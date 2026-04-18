@@ -185,6 +185,8 @@ body {
     margin-top: 10px;
 }
 
+
+
 /* Request Update Form */
 .update-card {
     grid-column: 1 / -1;
@@ -300,6 +302,11 @@ body {
     margin: 0 0 4px 0;
     font-size: 1.1rem;
 }
+.chat-header-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--accent);
+}
 
 .chat-messages {
     flex: 1;
@@ -402,7 +409,7 @@ body {
     <!-- Header -->
     <div class="header-area">
         <div class="brand">FIT<span>FORGE</span></div>
-        <button class="logout-btn logout">Logout</button>
+        <button class="logout-btn">Logout</button>
     </div>
 
     <!-- Left Column: Profile -->
@@ -411,9 +418,9 @@ body {
             <div class="avatar-ring">
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" alt="User Avatar">
             </div>
-            <h2 id="userName" class="profile-name">User Name</h2>
-            <p id="userId" class="profile-id">Email</p>
-            <div id="membershipStatus" class="status-badge">Active</div>
+            <h2 class="profile-name">Alex R.</h2>
+            <p class="profile-id">alex@example.com</p>
+            <div class="status-badge">Pro Active</div>
 
             <div class="qr-box">
                 <canvas id="qrCode"></canvas>
@@ -423,31 +430,27 @@ body {
 
     <!-- Middle Column: Stats Grid -->
     <div class="stats-col">
-        <!-- Hidden progress bar to prevent JS crash from legacy code, or we will just update JS -->
-        <span id="height" style="display:none"></span>
-        <div id="progressBar" style="display:none"></div>
-
         <div class="glass stat-card">
             <div class="stat-title">🏋️ Current Weight</div>
-            <div class="stat-value"><span id="weight">--</span> <span style="font-size: 1.2rem; color: var(--text-dim)">kg</span></div>
-            <div class="stat-subtitle">Logged value</div>
+            <div class="stat-value">84.5 <span style="font-size: 1.2rem; color: var(--text-dim)">kg</span></div>
+            <div class="stat-subtitle">↓ 1.2 kg this month</div>
         </div>
 
         <div class="glass stat-card">
             <div class="stat-title">⚖️ BMI</div>
-            <div class="stat-value" id="bmi">--</div>
-            <div class="stat-subtitle">Based on profile</div>
+            <div class="stat-value">24.1</div>
+            <div class="stat-subtitle">Healthy Range</div>
         </div>
 
         <div class="glass stat-card" style="position: relative;">
-            <div class="stat-title">🎯 Target Goal</div>
-            <div class="stat-value"><span id="goal">--</span> <span style="font-size: 1.2rem; color: var(--text-dim)">kg</span></div>
-            <div class="stat-subtitle">Goal Weight</div>
+            <div class="stat-title">🎯 Goal Progress</div>
+            <div class="stat-value">72%</div>
+            <div class="stat-subtitle">Target: 75 kg</div>
         </div>
 
         <div class="glass stat-card">
             <div class="stat-title">🔥 Active Streak</div>
-            <div class="stat-value" style="color: var(--accent);"><span id="streak">0</span> <span style="font-size: 1.2rem; color: var(--text-dim)">Days</span></div>
+            <div class="stat-value" style="color: var(--accent);">28 <span style="font-size: 1.2rem; color: var(--text-dim)">Days</span></div>
             <div class="stat-subtitle">Keep the momentum!</div>
         </div>
 
@@ -457,27 +460,8 @@ body {
                 <p style="margin: 0; color: var(--text-dim); font-size: 0.95rem;">Submit your daily weigh-in for trainer review.</p>
             </div>
             <div class="update-inputs">
-                <input id="newWeight" type="number" placeholder="Enter weight in kg" min="1">
-                <button class="btn-primary" onclick="requestUpdate()">Submit</button>
-            </div>
-        </div>
-
-        <div class="glass update-card" style="align-items: flex-start; flex-direction: column;">
-            <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 15px;">
-                <div>
-                    <h3 style="margin: 0 0 5px 0; font-size: 1.3rem;">📋 Your Active Plan</h3>
-                    <p style="margin: 0; color: var(--text-dim); font-size: 0.95rem;">Assigned by your trainer.</p>
-                </div>
-            </div>
-            <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
-                    <h4 style="margin: 0 0 10px 0; color: var(--accent);">Diet Plan</h4>
-                    <p id="dietPlanDisplay" style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #ddd; white-space: pre-wrap;">No diet plan assigned yet.</p>
-                </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid var(--glass-border);">
-                    <h4 style="margin: 0 0 10px 0; color: var(--accent);">Workout Plan</h4>
-                    <p id="workoutPlanDisplay" style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #ddd; white-space: pre-wrap;">No workout plan assigned yet.</p>
-                </div>
+                <input type="number" placeholder="Enter weight in kg">
+                <button class="btn-primary">Submit</button>
             </div>
         </div>
     </div>
@@ -490,17 +474,19 @@ body {
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Trainer" style="width:100%; border-radius:50%;">
                 </div>
                 <div class="chat-header-info">
-                    <h4 id="trainerName">Coach</h4>
+                    <h4>Coach Sarah</h4>
                 </div>
             </div>
             
-            <div id="chatMessages" class="chat-messages">
-                <!-- Messages go here -->
+            <div class="chat-messages">
+                <div class="msg trainer">Hi Alex! Great progress this week. 💪</div>
+                <div class="msg user">Thanks Sarah! Feeling much stronger.</div>
+                <div class="msg trainer">Let me know when you log your weight today.</div>
             </div>
 
             <div class="chat-input-area">
-                <input id="chatInput" type="text" placeholder="Message Coach...">
-                <button class="chat-send" onclick="sendMessage()">➤</button>
+                <input type="text" placeholder="Message Coach Sarah...">
+                <button class="chat-send">➤</button>
             </div>
         </div>
     </div>
@@ -509,8 +495,19 @@ body {
 
 <button class="floating-chat-btn" onclick="toggleChat()">💬 Chat with Coach</button>
 
-<script src="http://localhost:5001/socket.io/socket.io.js"></script>
-<script src="js/user.js"></script>
+<script>
+    function toggleChat() {
+        document.querySelector('.dashboard-wrapper').classList.toggle('chat-open');
+    }
+
+    // Rendering a dummy QR for visualization
+    setTimeout(() => {
+        QRCode.toCanvas(document.getElementById("qrCode"), "alex@example.com", {
+            width: 160,
+            margin: 1
+        });
+    }, 500);
+</script>
 
 </body>
 </html>

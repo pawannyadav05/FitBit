@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitForge Trainer Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --accent: #c6ff00;
+    --bg-main: #050505;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --text-dim: #888888;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+}
+
+.dashboard-wrapper {
+    width: 100%;
+    max-width: 1500px;
+    display: grid;
+    grid-template-columns: 320px 1fr 380px;
+    gap: 30px;
+}
+
+/* Header */
+.header-area {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+.brand span {
+    color: var(--accent);
+}
+
+.logout-btn {
+    background: transparent;
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.3);
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.logout-btn:hover {
+    background: rgba(255, 77, 77, 0.1);
+}
+
+/* Left Column: Profile */
+.profile-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-card {
+    padding: 40px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.avatar-ring {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(135deg, var(--accent), #222);
+    margin-bottom: 20px;
+}
+
+.avatar-ring img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #111;
+}
+
+.profile-name {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+}
+
+.profile-id {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin: 0 0 25px 0;
+}
+
+.status-badge {
+    background: rgba(198, 255, 0, 0.1);
+    color: var(--accent);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid rgba(198, 255, 0, 0.2);
+}
+
+.qr-box {
+    margin-top: 40px;
+    background: white;
+    padding: 15px;
+    border-radius: 16px;
+}
+#qrCode {
+    width: 160px !important;
+    height: 160px !important;
+}
+
+/* Middle Column: Main Content */
+.main-col {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.section-title span {
+    background: var(--accent);
+    color: #000;
+    padding: 2px 10px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+/* Pending Request Cards */
+.pending-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.pending-card {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.pending-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pending-user img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.pending-user h4 {
+    margin: 0 0 3px 0;
+    font-size: 1.05rem;
+}
+
+.pending-user p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+.weight-update {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: rgba(255,255,255,0.03);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.weight-val {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.weight-arrow {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.pending-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.btn-approve, .btn-reject {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-approve {
+    background: var(--accent);
+    color: #000;
+}
+
+.btn-reject {
+    background: rgba(255, 77, 77, 0.1);
+    color: #ff4d4d;
+    border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+.btn-approve:hover, .btn-reject:hover {
+    transform: translateY(-2px);
+}
+
+/* Clients Table */
+.clients-card {
+    padding: 30px;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.clients-table th {
+    text-align: left;
+    padding: 15px;
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.clients-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+}
+
+.client-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.client-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+.client-info div p {
+    margin: 0;
+}
+.client-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+.client-email {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+}
+
+.btn-chat {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--glass-border);
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.btn-chat:hover {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+}
+
+/* Right Column: Integrated Chat */
+.chat-col {
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateX(20px);
+    position: sticky;
+    top: 40px;
+    height: calc(100vh - 80px);
+}
+
+.dashboard-wrapper.chat-open .chat-col {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+.chat-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+}
+
+.chat-header {
+    padding: 25px;
+    border-bottom: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.chat-header-avatar {
+    width: 45px;
+    height: 45px;
+    background: #333;
+    border-radius: 50%;
+}
+
+.chat-header-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 25px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 400px;
+}
+
+.msg {
+    max-width: 85%;
+    padding: 14px 20px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.msg.user {
+    background: rgba(255,255,255,0.08);
+    align-self: flex-start;
+    border-bottom-left-radius: 6px;
+}
+
+.msg.trainer {
+    background: var(--accent);
+    color: #000;
+    align-self: flex-end;
+    border-bottom-right-radius: 6px;
+}
+
+.chat-input-area {
+    padding: 20px;
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 16px 25px;
+    border-radius: 50px;
+    outline: none;
+    font-size: 1rem;
+}
+
+.chat-send {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+.chat-send:hover {
+    transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .pending-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+    <!-- Header -->
+    <div class="header-area">
+        <div class="brand">FIT<span>FORGE</span> <span style="font-size: 1rem; font-weight: 500; color: white;">Trainer</span></div>
+        <button class="logout-btn">Logout</button>
+    </div>
+
+    <!-- Left Column: Profile -->
+    <div class="profile-col">
+        <div class="glass profile-card">
+            <div class="avatar-ring">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Trainer" alt="Trainer Avatar">
+            </div>
+            <h2 class="profile-name">Coach Sarah</h2>
+            <p class="profile-id">sarah.fit@example.com</p>
+            <div class="status-badge">Active</div>
+
+            <div class="qr-box">
+                <canvas id="qrCode"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Column: Main Content -->
+    <div class="main-col">
+        
+        <!-- Pending Approvals -->
+        <div>
+            <h3 class="section-title">Pending Updates <span>2</span></h3>
+            <div class="pending-grid">
+                
+                <div class="glass pending-card">
+                    <div class="pending-user">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex">
+                        <div>
+                            <h4>Alex R.</h4>
+                        </div>
+                    </div>
+                    <div class="weight-update">
+                        <div class="weight-val">85.7 <span style="font-size:0.8rem;color:#888;">kg</span></div>
+                        <div class="weight-arrow">➔</div>
+                        <div class="weight-val">84.5 <span style="font-size:0.8rem;color:#888;">kg</span></div>
+                    </div>
+                    <div class="pending-actions">
+                        <button class="btn-approve">Approve</button>
+                        <button class="btn-reject">Reject</button>
+                    </div>
+                </div>
+
+                <div class="glass pending-card">
+                    <div class="pending-user">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=John">
+                        <div>
+                            <h4>John D.</h4>
+                        </div>
+                    </div>
+                    <div class="weight-update">
+                        <div class="weight-val">90.0 <span style="font-size:0.8rem;color:#888;">kg</span></div>
+                        <div class="weight-arrow">➔</div>
+                        <div class="weight-val">89.2 <span style="font-size:0.8rem;color:#888;">kg</span></div>
+                    </div>
+                    <div class="pending-actions">
+                        <button class="btn-approve">Approve</button>
+                        <button class="btn-reject">Reject</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- My Clients -->
+        <div class="glass clients-card">
+            <h3 class="section-title">My Clients <span>3</span></h3>
+            <table class="clients-table">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th>Current Weight</th>
+                        <th>Goal Weight</th>
+                        <th>Streak</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="client-info">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex">
+                                <div>
+                                    <p class="client-name">Alex R.</p>
+                                    <p class="client-email">alex@example.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>84.5 kg</td>
+                        <td>75.0 kg</td>
+                        <td style="color: var(--accent); font-weight: 700;">28 Days</td>
+                        <td><button class="btn-chat" onclick="openChatMockup('Alex R.', 'Alex')">Message</button></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="client-info">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=John">
+                                <div>
+                                    <p class="client-name">John D.</p>
+                                    <p class="client-email">john@example.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>89.2 kg</td>
+                        <td>85.0 kg</td>
+                        <td style="color: var(--accent); font-weight: 700;">12 Days</td>
+                        <td><button class="btn-chat" onclick="openChatMockup('John D.', 'John')">Message</button></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="client-info">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Emma">
+                                <div>
+                                    <p class="client-name">Emma S.</p>
+                                    <p class="client-email">emma@example.com</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>62.0 kg</td>
+                        <td>60.0 kg</td>
+                        <td style="color: var(--accent); font-weight: 700;">45 Days</td>
+                        <td><button class="btn-chat" onclick="openChatMockup('Emma S.', 'Emma')">Message</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Assign Plan -->
+        <div class="glass clients-card">
+            <h3 class="section-title">Assign Plan</h3>
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <select style="flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:white; padding:15px; border-radius:12px; outline:none; font-family:inherit;">
+                    <option style="background:#111;">Alex R.</option>
+                    <option style="background:#111;">John D.</option>
+                    <option style="background:#111;">Emma S.</option>
+                </select>
+                <button class="btn-approve" onclick="sendPlanMockup()" style="padding: 15px 25px; border-radius: 12px;">Send Plan</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <textarea id="dietPlanInput" placeholder="Write diet plan..." rows="4" style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:white; padding:15px; border-radius:12px; resize:none; outline:none; font-family:inherit;"></textarea>
+                <textarea id="exercisePlanInput" placeholder="Write exercise plan..." rows="4" style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:white; padding:15px; border-radius:12px; resize:none; outline:none; font-family:inherit;"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Integrated Chat -->
+    <div class="chat-col">
+        <div class="glass chat-card">
+            <div class="chat-header">
+                <div class="chat-header-avatar">
+                    <img id="chatHeaderAvatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex" style="width:100%; border-radius:50%;">
+                </div>
+                <div class="chat-header-info">
+                    <h4 id="chatHeaderName">Alex R.</h4>
+                </div>
+                <span onclick="closeChatMockup()" style="cursor:pointer; font-size: 1.2rem; color: #888; margin-left: auto;">✕</span>
+            </div>
+            
+            <div class="chat-messages">
+                <div class="msg trainer">Hi Alex! Great progress this week. 💪</div>
+                <div class="msg user">Thanks Coach! Feeling much stronger.</div>
+                <div class="msg trainer">I just approved your new weight. Keep it up!</div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" placeholder="Message Alex...">
+                <button class="chat-send">➤</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function openChatMockup(name, seed) {
+        document.getElementById('chatHeaderName').innerText = name;
+        document.getElementById('chatHeaderAvatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+        
+        const messages = document.querySelector('.chat-messages');
+        messages.innerHTML = `
+            <div class="msg trainer">Hi ${name.split(' ')[0]}, this is a mock chat! 👋</div>
+        `;
+        document.querySelector('.chat-input-area input').placeholder = `Message ${name.split(' ')[0]}...`;
+
+        document.querySelector('.dashboard-wrapper').classList.add('chat-open');
+    }
+
+    function closeChatMockup() {
+        document.querySelector('.dashboard-wrapper').classList.remove('chat-open');
+    }
+
+    function sendPlanMockup() {
+        const diet = document.getElementById('dietPlanInput');
+        const exercise = document.getElementById('exercisePlanInput');
+        
+        if(!diet.value.trim() && !exercise.value.trim()) {
+            alert('Please write a diet or exercise plan before sending.');
+            return;
+        }
+
+        alert('Plan sent successfully to the client!');
+        
+        // Clear the data
+        diet.value = '';
+        exercise.value = '';
+    }
+
+    // Rendering a dummy QR for visualization
+    setTimeout(() => {
+        QRCode.toCanvas(document.getElementById("qrCode"), "sarah.fit@example.com", {
+            width: 160,
+            margin: 1
+        });
+    }, 500);
+</script>
+
+</body>
+</html>

@@ -67,13 +67,13 @@ function loadUser() {
 }
 
 function toggleChat() {
-    const chat = document.getElementById("chatBox");
-    const isOpening = chat.style.display !== "flex";
-    chat.style.display = isOpening ? "flex" : "none";
+    const wrapper = document.querySelector('.dashboard-wrapper');
+    const isOpening = !wrapper.classList.contains('chat-open');
+    wrapper.classList.toggle('chat-open');
 
     if (isOpening && !activeTrainer) {
         const box = document.getElementById("chatMessages");
-        box.innerHTML = `<div style="background:#222;color:white;">No trainer is available for chat right now.</div>`;
+        box.innerHTML = `<div style="background:rgba(255,255,255,0.08);color:white;padding:14px 20px;border-radius:20px;">No trainer is available for chat right now.</div>`;
         return;
     }
 
@@ -131,10 +131,8 @@ function appendUserMessage(data) {
     const messageDiv = document.createElement("div");
     const isYou = String(data.sender) === String(user._id);
 
-    messageDiv.style.alignSelf = isYou ? "flex-end" : "flex-start";
-    messageDiv.style.background = isYou ? "#c6ff00" : "#222";
-    messageDiv.style.color = isYou ? "black" : "white";
-    messageDiv.innerHTML = `<b>${isYou ? "You" : activeTrainer?.name || "Trainer"}:</b> ${data.message}`;
+    messageDiv.className = isYou ? "msg user" : "msg trainer";
+    messageDiv.innerText = data.message;
 
     box.appendChild(messageDiv);
     box.scrollTop = box.scrollHeight;
@@ -156,6 +154,10 @@ async function loadTrainer() {
         }
 
         activeTrainer = trainers[0];
+        const trainerNameEl = document.getElementById("trainerName");
+        if (trainerNameEl) {
+            trainerNameEl.innerText = activeTrainer.name || "Coach";
+        }
     } catch (err) {
         console.error("Load trainer error:", err);
         activeTrainer = null;
