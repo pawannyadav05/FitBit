@@ -4,6 +4,37 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select("-password");
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        // Passive streak reset logic
+        if (user.lastActivityDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const lastActivity = new Date(user.lastActivityDate);
+            lastActivity.setHours(0, 0, 0, 0);
+            
+            const diffTime = today.getTime() - lastActivity.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1 && user.streak > 0) {
+                user.streak = 0;
+                await user.save();
+            }
+        }
+
+        res.json(user);
+    } catch (err) {
+        console.error("Get user error:", err);
+        res.status(500).json({ msg: "Server error" });
+    }
+});
+
 router.post("/request-update", authMiddleware, async (req, res) => {
     try {
         const { weight } = req.body;
@@ -23,6 +54,27 @@ router.post("/request-update", authMiddleware, async (req, res) => {
         user.pendingRequest = {
             weight: parsedWeight
         };
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (user.lastActivityDate) {
+            const lastActivity = new Date(user.lastActivityDate);
+            lastActivity.setHours(0, 0, 0, 0);
+            
+            const diffTime = today.getTime() - lastActivity.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) {
+                user.streak += 1;
+            } else if (diffDays > 1) {
+                user.streak = 1;
+            }
+        } else {
+            user.streak = 1;
+        }
+        
+        user.lastActivityDate = new Date();
 
         await user.save();
 

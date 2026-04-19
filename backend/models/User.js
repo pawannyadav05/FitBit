@@ -34,6 +34,14 @@ const userSchema=new mongoose.Schema({
             default: null
         }
     },
+    streak: {
+        type: Number,
+        default: 0
+    },
+    lastActivityDate: {
+        type: Date,
+        default: null
+    },
     role: {
         type: String,
         enum: ["user", "trainer", "admin"],

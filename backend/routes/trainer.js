@@ -1,18 +1,19 @@
 import express from "express";
 import User from "../models/User.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/users", async (req, res) => {
+router.get("/users", authMiddleware, async (req, res) => {
     try {
-        const users = await User.find({ role: "user" });
+        const users = await User.find({ role: "user", trainer: req.user.id });
         res.json(users);
     } catch (err) {
         res.status(500).json({ msg: "Server error" });
     }
 });
 
-router.post("/approve/:id", async (req, res) => {
+router.post("/approve/:id", authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
 
@@ -33,7 +34,7 @@ router.post("/approve/:id", async (req, res) => {
     }
 });
 
-router.post("/reject/:id", async (req, res) => {
+router.post("/reject/:id", authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
 

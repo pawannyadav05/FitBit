@@ -31,7 +31,23 @@ function attachLogout() {
     });
 }
 
-function loadUser() {
+async function loadUser() {
+    try {
+        const res = await fetch(`${API_BASE}/api/user/me`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        
+        if (res.ok) {
+            const dbUser = await res.json();
+            Object.assign(user, dbUser);
+            localStorage.setItem("user", JSON.stringify(user));
+        }
+    } catch (err) {
+        console.error("Failed to fetch fresh user data:", err);
+    }
+
     const userName = user.name || "User";
     const userEmail = user.email || "No email";
     const membershipStatus = user.membershipStatus || "Active";
@@ -216,6 +232,9 @@ async function requestUpdate() {
 
         alert("Weight update request sent successfully.");
         document.getElementById("newWeight").value = "";
+        
+        // Reload user to update the streak instantly in UI
+        loadUser();
     } catch (err) {
         console.error("Request update error:", err);
         alert("Server error. Please try again.");

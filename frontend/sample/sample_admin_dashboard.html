@@ -287,7 +287,7 @@ tr:last-child td {
         <div class="brand">
             FitForge <span class="badge-admin">ADMIN</span>
         </div>
-        <button class="logout-btn logout">Logout</button>
+        <button class="logout-btn">Logout</button>
     </nav>
 
     <!-- Main Container -->
@@ -300,17 +300,17 @@ tr:last-child td {
                 <h3>Create Trainer</h3>
                 <div class="form-group">
                     <label>Full Name</label>
-                    <input type="text" id="trainerNameInput" placeholder="e.g. Sarah Connor">
+                    <input type="text" placeholder="e.g. Sarah Connor">
                 </div>
                 <div class="form-group">
                     <label>Email Address</label>
-                    <input type="email" id="trainerEmailInput" placeholder="sarah@fitforge.com">
+                    <input type="email" placeholder="sarah@fitforge.com">
                 </div>
                 <div class="form-group">
                     <label>Temporary Password</label>
-                    <input type="password" id="trainerPasswordInput" placeholder="••••••••">
+                    <input type="password" placeholder="••••••••">
                 </div>
-                <button class="btn-primary" onclick="createTrainer()">Create Account</button>
+                <button class="btn-primary" onclick="alert('Mock: Trainer created!')">Create Account</button>
             </div>
             
             <!-- Quick Stats -->
@@ -318,11 +318,11 @@ tr:last-child td {
                 <h3>System Overview</h3>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--glass-border);">
                     <span style="color: var(--text-muted);">Total Users</span>
-                    <span id="totalUsers" style="font-size: 1.2rem; font-weight: 600;">0</span>
+                    <span style="font-size: 1.2rem; font-weight: 600;">124</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                     <span style="color: var(--text-muted);">Active Trainers</span>
-                    <span id="activeTrainers" style="font-size: 1.2rem; font-weight: 600;">0</span>
+                    <span style="font-size: 1.2rem; font-weight: 600;">8</span>
                 </div>
             </div>
         </div>
@@ -344,8 +344,54 @@ tr:last-child td {
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="userTableBody">
-                            <!-- Populated via JS -->
+                        <tbody>
+                            <!-- Row 1 -->
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">AR</div>
+                                        <div class="user-details">
+                                            <h4>Alex R.</h4>
+                                            <p>alex@example.com</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge assigned">Sarah Connor</span>
+                                </td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="btn-delete" onclick="alert('Mock: User deleted')">Remove</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 2 -->
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar" style="color: #fff;">JP</div>
+                                        <div class="user-details">
+                                            <h4>Jane P.</h4>
+                                            <p>jane@example.com</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge unassigned">Unassigned</span>
+                                </td>
+                                <td>
+                                    <div class="action-cell">
+                                        <select class="assign-select">
+                                            <option value="" disabled selected>Select Trainer</option>
+                                            <option value="1">Sarah Connor</option>
+                                            <option value="2">Mike Tyson</option>
+                                        </select>
+                                        <button class="btn-assign" onclick="alert('Mock: Trainer assigned')">Assign</button>
+                                        <button class="btn-delete" onclick="alert('Mock: User deleted')">Remove</button>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -365,8 +411,37 @@ tr:last-child td {
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="trainerTableBody">
-                            <!-- Populated via JS -->
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar" style="background: rgba(198, 255, 0, 0.1); color: var(--accent);">SC</div>
+                                        <div class="user-details">
+                                            <h4>Sarah Connor</h4>
+                                            <p>sarah@fitforge.com</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="font-weight: 600;">12</span> clients</td>
+                                <td>
+                                    <button class="btn-delete" onclick="alert('Mock: Trainer deleted')">Revoke Access</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar" style="background: rgba(198, 255, 0, 0.1); color: var(--accent);">MT</div>
+                                        <div class="user-details">
+                                            <h4>Mike Tyson</h4>
+                                            <p>mike@fitforge.com</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span style="font-weight: 600;">8</span> clients</td>
+                                <td>
+                                    <button class="btn-delete" onclick="alert('Mock: Trainer deleted')">Revoke Access</button>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -375,6 +450,5 @@ tr:last-child td {
         </div>
     </div>
 
-    <script src="js/admin.js"></script>
 </body>
 </html>

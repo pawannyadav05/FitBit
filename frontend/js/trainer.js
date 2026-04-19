@@ -49,31 +49,38 @@ const pendingContainer = document.getElementById("pendingContainer");
 
 // ✅ FIXED PENDING (from DB instead of dummy)
 function renderPending() {
-    pendingContainer.innerHTML = "<h3>Pending Requests</h3>";
-
+    const pendingCount = document.getElementById("pendingCount");
     const pending = allUsers.filter(u => u.pendingRequest);
+    pendingCount.innerText = pending.length;
 
     if (!pending.length) {
-        pendingContainer.innerHTML += `
-            <div class="user-card">
-                <p>No pending requests right now.</p>
+        pendingContainer.innerHTML = `
+            <div class="glass pending-card" style="grid-column: 1 / -1;">
+                <p style="text-align:center;">No pending requests right now.</p>
             </div>
         `;
         return;
     }
 
-    pending.forEach((u) => {
-        const div = document.createElement("div");
-        div.className = "user-card";
-
-        div.innerHTML = `
-            <p>${u.name} → ${u.pendingRequest.weight} kg</p>
-            <button onclick="approveWeight('${u._id}')">Approve</button>
-            <button onclick="rejectWeight('${u._id}')">Reject</button>
-        `;
-
-        pendingContainer.appendChild(div);
-    });
+    pendingContainer.innerHTML = pending.map((u) => `
+        <div class="glass pending-card">
+            <div class="pending-user">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}">
+                <div>
+                    <h4>${u.name}</h4>
+                </div>
+            </div>
+            <div class="weight-update">
+                <div class="weight-val">${u.weight} <span style="font-size:0.8rem;color:#888;">kg</span></div>
+                <div class="weight-arrow">➔</div>
+                <div class="weight-val">${u.pendingRequest.weight} <span style="font-size:0.8rem;color:#888;">kg</span></div>
+            </div>
+            <div class="pending-actions">
+                <button class="btn-approve" onclick="approveWeight('${u._id}')">Approve</button>
+                <button class="btn-reject" onclick="rejectWeight('${u._id}')">Reject</button>
+            </div>
+        </div>
+    `).join("");
 }
 
 async function approveWeight(userId) {
@@ -100,98 +107,100 @@ async function rejectWeight(userId) {
     loadTrainerUsers();
 }
 
-const tableContainer = document.getElementById("tableContainer");
+const clientsTableBody = document.getElementById("clientsTableBody");
+const clientCount = document.getElementById("clientCount");
+const assignPlanSelect = document.getElementById("assignPlanSelect");
 
 function renderUsersTable() {
+    clientCount.innerText = allUsers.length;
+
+    // Populate the Assign Plan Select dropdown
+    assignPlanSelect.innerHTML = `<option value="">Select a Client...</option>` + 
+        allUsers.map((u) => `<option value="${u._id}" style="background:#111;">${u.name}</option>`).join("");
+
     if (!allUsers.length) {
-        tableContainer.innerHTML = `
-            <h3>Users Details & Chat</h3>
-            <div class="user-card">
-                <p>No users found.</p>
-            </div>
+        clientsTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" style="text-align: center;">No clients found.</td>
+            </tr>
         `;
         return;
     }
 
-    tableContainer.innerHTML = `
-        <h3>Users Details & Chat</h3>
-
-        <table>
+    clientsTableBody.innerHTML = allUsers.map((u, i) => {
+        return `
             <tr>
-                <th>Name</th>
-                <th>Height</th>
-                <th>Weight</th>
-                <th>BMI</th>
-                <th>Chat</th>
-            </tr>
-
-            ${allUsers.map((u, i) => {
-                const bmi = (u.weight / ((u.height / 100) ** 2)).toFixed(2);
-
-                return `
-                <tr>
-                    <td>${u.name}</td>
-                    <td>${u.height} cm</td>
-                    <td>${u.weight} kg</td>
-                    <td>${bmi}</td>
-                    <td>
-                        <button class="chat-btn-table" onclick="toggleUserChat(${i})">
-                            💬 Chat
-                        </button>
-                    </td>
-                </tr>
-
-                <tr id="chat-${i}" style="display:none;">
-                    <td colspan="5">
-                        <div style="background:#161616;padding:10px;border-radius:10px;">
-                            <div id="messages-${i}" style="height:150px;overflow:auto;margin-bottom:10px;"></div>
-                            <input id="input-${i}" placeholder="Type message">
-                            <button onclick="sendUserMessage(${i})">Send</button>
+                <td>
+                    <div class="client-info">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}">
+                        <div>
+                            <p class="client-name">${u.name}</p>
+                            <p class="client-email">${u.email || ''}</p>
                         </div>
-                    </td>
-                </tr>
-                `;
-            }).join("")}
-        </table>
-    `;
+                    </div>
+                </td>
+                <td>${u.weight} kg</td>
+                <td>${u.goalWeight || '-'} kg</td>
+                <td style="color: var(--accent); font-weight: 700;">Active</td>
+                <td><button class="btn-chat" onclick="openChat(${i})">Message</button></td>
+            </tr>
+        `;
+    }).join("");
 }
 
 function renderUsersLoading() {
-    tableContainer.innerHTML = `
-        <h3>Users Details & Chat</h3>
-        <div class="user-card">
-            <p>Loading users...</p>
-        </div>
+    clientsTableBody.innerHTML = `
+        <tr>
+            <td colspan="5" style="text-align: center;">Loading clients...</td>
+        </tr>
     `;
 }
 
 function renderUsersError(message = "Failed to load users.") {
-    tableContainer.innerHTML = `
-        <h3>Users Details & Chat</h3>
-        <div class="user-card">
-            <p>${message}</p>
-        </div>
+    clientsTableBody.innerHTML = `
+        <tr>
+            <td colspan="5" style="text-align: center;">${message}</td>
+        </tr>
     `;
 }
 
-function toggleUserChat(i) {
-    const row = document.getElementById(`chat-${i}`);
-    const isOpening = row.style.display === "none";
-    row.style.display = isOpening ? "table-row" : "none";
+let currentChatIndex = null;
 
-    if (isOpening) {
-        loadTrainerChatHistory(i);
-    }
+function openChat(i) {
+    currentChatIndex = i;
+    const user = allUsers[i];
+    document.getElementById("chatHeaderName").innerText = user.name;
+    document.getElementById("chatHeaderAvatar").src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`;
+    document.getElementById("chatInput").placeholder = `Message ${user.name.split(' ')[0]}...`;
+    
+    document.getElementById("dashboardWrapper").classList.add("chat-open");
+    
+    loadTrainerChatHistory(i);
 }
 
+function closeChat() {
+    document.getElementById("dashboardWrapper").classList.remove("chat-open");
+    currentChatIndex = null;
+}
+
+document.getElementById("chatSendBtn")?.addEventListener("click", () => {
+    if (currentChatIndex !== null) sendUserMessage(currentChatIndex);
+});
+
+document.getElementById("chatInput")?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && currentChatIndex !== null) {
+        sendUserMessage(currentChatIndex);
+    }
+});
+
 function sendUserMessage(i) {
-    const input = document.getElementById(`input-${i}`);
+    const input = document.getElementById("chatInput");
     const text = input.value.trim();
     const chatUser = allUsers[i];
 
     if (!text || !chatUser?._id || !trainer._id) return;
 
-    appendTrainerMessage(i, {
+    appendTrainerMessage({
         sender: trainer._id,
         message: text
     });
@@ -203,6 +212,10 @@ function sendUserMessage(i) {
     });
 
     input.value = "";
+}
+
+function assignPlan() {
+    alert("Backend functionality for sending plans will be integrated shortly!");
 }
 
 attachLogout();
@@ -218,26 +231,21 @@ socket.on("receiveMessage", (data) => {
 
     if (chatIndex === -1) return;
 
-    appendTrainerMessage(chatIndex, data);
+    // Only append if the currently open chat is the one that sent the message
+    if (currentChatIndex === chatIndex) {
+        appendTrainerMessage(data);
+    }
 });
 
-function appendTrainerMessage(index, data) {
-    const box = document.getElementById(`messages-${index}`);
+function appendTrainerMessage(data) {
+    const box = document.getElementById("chatMessages");
     if (!box) return;
 
     const isYou = String(data.sender) === String(trainer._id);
-
     const messageDiv = document.createElement("div");
 
-    messageDiv.style.textAlign = isYou ? "right" : "left";
-    messageDiv.style.background = isYou ? "#c6ff00" : "#222";
-    messageDiv.style.color = isYou ? "black" : "white";
-    messageDiv.style.margin = "5px";
-    messageDiv.style.padding = "5px";
-
-    messageDiv.innerHTML = `
-        <b>${isYou ? "You" : allUsers[index]?.name}:</b> ${data.message}
-    `;
+    messageDiv.className = isYou ? "msg trainer" : "msg user";
+    messageDiv.innerText = data.message;
 
     box.appendChild(messageDiv);
     box.scrollTop = box.scrollHeight;
@@ -245,7 +253,6 @@ function appendTrainerMessage(index, data) {
 
 async function loadTrainerUsers() {
     try {
-        // ✅ FIXED API
         const res = await fetch(`${API_BASE}/api/trainer/users`, {
             headers: {
                 "Authorization": `Bearer ${token}`
@@ -262,7 +269,7 @@ async function loadTrainerUsers() {
         allUsers = users;
 
         renderUsersTable();
-        renderPending(); // ✅ IMPORTANT FIX
+        renderPending(); 
 
     } catch (err) {
         console.error("Load trainer users error:", err);
@@ -285,10 +292,10 @@ async function loadTrainerChatHistory(index) {
 
         if (!res.ok) return;
 
-        const box = document.getElementById(`messages-${index}`);
+        const box = document.getElementById("chatMessages");
         box.innerHTML = "";
 
-        messages.forEach((msg) => appendTrainerMessage(index, msg));
+        messages.forEach((msg) => appendTrainerMessage(msg));
     } catch (err) {
         console.error("Chat load error:", err);
     }

@@ -47,6 +47,10 @@ async function loadData() {
         const trainerData = await resTrainers.json();
         if (resTrainers.ok) trainers = trainerData;
 
+        // Update Quick Stats
+        document.getElementById("totalUsers").innerText = users.length;
+        document.getElementById("activeTrainers").innerText = trainers.length;
+
         renderUsers();
         renderTrainers();
 
@@ -59,42 +63,62 @@ async function loadData() {
 // =====================
 // USERS TABLE
 // =====================
-const userTable = document.getElementById("userTable");
+const userTableBody = document.getElementById("userTableBody");
+
+function getInitials(name) {
+    if (!name) return "??";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function renderUsers() {
-    userTable.innerHTML = `
-        <tr>
-            <th>Name</th>
-            <th>Assigned Trainer</th>
-            <th>Assign Trainer</th>
-            <th>Delete</th>
-        </tr>
+    userTableBody.innerHTML = users.map((u, i) => {
+        const initials = getInitials(u.name);
+        let trainerCol = "";
+        let actionCol = "";
 
-        ${users.map((u, i) => `
-            <tr>
-                <td>${u.name}</td>
-
-                <td>${u.trainer || "Not Assigned"}</td>
-
-                <td>
-                    <select id="trainer-${i}">
-                        <option value="">Select</option>
+        if (u.trainer) {
+            trainerCol = `<span class="badge assigned">${u.trainer}</span>`;
+            actionCol = `
+                <div class="action-cell">
+                    <button class="btn-delete" onclick="deleteUser('${u._id}')">Remove</button>
+                </div>
+            `;
+        } else {
+            trainerCol = `<span class="badge unassigned">Unassigned</span>`;
+            actionCol = `
+                <div class="action-cell">
+                    <select class="assign-select" id="trainer-${i}">
+                        <option value="" disabled selected>Select Trainer</option>
                         ${trainers.map(t => `<option value="${t._id}">${t.name}</option>`).join("")}
                     </select>
+                    <button class="btn-assign" onclick="assignTrainer('${u._id}', ${i})">Assign</button>
+                    <button class="btn-delete" onclick="deleteUser('${u._id}')">Remove</button>
+                </div>
+            `;
+        }
 
-                    <button onclick="assignTrainer('${u._id}', ${i})">
-                        Assign
-                    </button>
-                </td>
-
+        return `
+            <tr>
                 <td>
-                    <button onclick="deleteUser('${u._id}')">
-                        Delete
-                    </button>
+                    <div class="user-info">
+                        <div class="avatar">${initials}</div>
+                        <div class="user-details">
+                            <h4>${u.name}</h4>
+                            <p>${u.email}</p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    ${trainerCol}
+                </td>
+                <td>
+                    ${actionCol}
                 </td>
             </tr>
-        `).join("")}
-    `;
+        `;
+    }).join("");
 }
 
 // =====================
@@ -159,26 +183,31 @@ async function deleteUser(userId) {
 // =====================
 // TRAINERS TABLE
 // =====================
-const trainerTable = document.getElementById("trainerTable");
+const trainerTableBody = document.getElementById("trainerTableBody");
 
 function renderTrainers() {
-    trainerTable.innerHTML = `
-        <tr>
-            <th>Name</th>
-            <th>Delete</th>
-        </tr>
+    trainerTableBody.innerHTML = trainers.map((t) => {
+        const initials = getInitials(t.name);
+        const clientCount = users.filter(u => u.trainer === t.name).length;
 
-        ${trainers.map((t) => `
+        return `
             <tr>
-                <td>${t.name}</td>
                 <td>
-                    <button onclick="deleteTrainer('${t._id}')">
-                        Delete
-                    </button>
+                    <div class="user-info">
+                        <div class="avatar" style="background: rgba(198, 255, 0, 0.1); color: var(--accent);">${initials}</div>
+                        <div class="user-details">
+                            <h4>${t.name}</h4>
+                            <p>${t.email}</p>
+                        </div>
+                    </div>
+                </td>
+                <td><span style="font-weight: 600;">${clientCount}</span> clients</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteTrainer('${t._id}')">Revoke Access</button>
                 </td>
             </tr>
-        `).join("")}
-    `;
+        `;
+    }).join("");
 }
 
 // =====================
