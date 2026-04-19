@@ -214,8 +214,44 @@ function sendUserMessage(i) {
     input.value = "";
 }
 
-function assignPlan() {
-    alert("Backend functionality for sending plans will be integrated shortly!");
+async function assignPlan() {
+    const userId = document.getElementById("assignPlanSelect").value;
+    const dietPlan = document.getElementById("dietPlanInput").value.trim();
+    const workoutPlan = document.getElementById("exercisePlanInput").value.trim();
+
+    if (!userId) {
+        alert("Please select a client first.");
+        return;
+    }
+
+    if (!dietPlan && !workoutPlan) {
+        alert("Please enter a diet or workout plan.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/trainer/assign-plan/${userId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ dietPlan, workoutPlan })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            alert("Plan assigned successfully!");
+            document.getElementById("dietPlanInput").value = "";
+            document.getElementById("exercisePlanInput").value = "";
+        } else {
+            alert(data.msg || "Failed to assign plan.");
+        }
+    } catch (err) {
+        console.error("Assign plan error:", err);
+        alert("Server error. Please try again.");
+    }
 }
 
 attachLogout();

@@ -52,4 +52,32 @@ router.post("/reject/:id", authMiddleware, async (req, res) => {
     }
 });
 
+router.post("/assign-plan/:userId", authMiddleware, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { dietPlan, workoutPlan } = req.body;
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        // Verify that the user is assigned to this trainer
+        if (user.trainer.toString() !== req.user.id) {
+            return res.status(403).json({ msg: "Not authorized to assign plan to this user" });
+        }
+
+        user.dietPlan = dietPlan;
+        user.workoutPlan = workoutPlan;
+
+        await user.save();
+
+        res.json({ msg: "Plan assigned successfully" });
+    } catch (err) {
+        console.error("Assign plan error:", err);
+        res.status(500).json({ msg: "Server error" });
+    }
+});
+
 export default router;

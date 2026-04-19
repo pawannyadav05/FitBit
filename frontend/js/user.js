@@ -68,10 +68,34 @@ async function loadUser() {
     document.getElementById("streak").innerText = streak;
 
     if (height && currentWeight) {
-        const bmi = (currentWeight / ((height / 100) ** 2)).toFixed(2);
-        document.getElementById("bmi").innerText = bmi;
+        const bmiValue = (currentWeight / ((height / 100) ** 2));
+        const bmiStr = bmiValue.toFixed(2);
+        document.getElementById("bmi").innerText = bmiStr;
+        
+        let status = "";
+        let color = "var(--text-dim)";
+        
+        if (bmiValue < 18.5) {
+            status = "Underweight";
+            color = "#ffcc00"; // Yellow
+        } else if (bmiValue >= 18.5 && bmiValue < 25) {
+            status = "Normal Weight";
+            color = "#00ff88"; // Green
+        } else if (bmiValue >= 25 && bmiValue < 30) {
+            status = "Overweight";
+            color = "#ff8800"; // Orange
+        } else {
+            status = "Obese";
+            color = "#ff4444"; // Red
+        }
+        
+        const bmiStatusEl = document.getElementById("bmiStatus");
+        bmiStatusEl.innerText = status;
+        bmiStatusEl.style.color = color;
+        bmiStatusEl.style.fontWeight = "700";
     } else {
         document.getElementById("bmi").innerText = "Not set";
+        document.getElementById("bmiStatus").innerText = "Based on profile";
     }
 
     if (currentWeight && targetWeight) {
@@ -80,6 +104,13 @@ async function loadUser() {
     } else {
         document.getElementById("progressBar").style.width = "0%";
     }
+
+    // Display Plans
+    const dietPlan = user.dietPlan || "No diet plan assigned yet.";
+    const workoutPlan = user.workoutPlan || "No workout plan assigned yet.";
+
+    document.getElementById("dietPlanDisplay").innerText = dietPlan;
+    document.getElementById("workoutPlanDisplay").innerText = workoutPlan;
 }
 
 function toggleChat() {

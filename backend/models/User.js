@@ -42,6 +42,14 @@ const userSchema=new mongoose.Schema({
         type: Date,
         default: null
     },
+    dietPlan: {
+        type: String,
+        default: null
+    },
+    workoutPlan: {
+        type: String,
+        default: null
+    },
     role: {
         type: String,
         enum: ["user", "trainer", "admin"],
