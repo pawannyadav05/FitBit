@@ -44,6 +44,7 @@ router.post("/register", async (req, res) => {
             password: hashedPassword,
             height: parsedHeight,
             weight: parsedWeight,
+            startWeight: parsedWeight,
             goalWeight: parsedGoalWeight,
             role: "user"
         });
@@ -94,6 +95,7 @@ router.post("/login", async (req, res) => {
                 email: user.email,
                 height: user.height,
                 weight: user.weight,
+                startWeight: user.startWeight,
                 goalWeight: user.goalWeight,
                 role: user.role
             }

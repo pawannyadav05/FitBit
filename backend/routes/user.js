@@ -78,6 +78,15 @@ router.post("/request-update", authMiddleware, async (req, res) => {
 
         await user.save();
 
+        // Notify trainer in real-time
+        if (req.io && user.trainer) {
+            req.io.to(user.trainer.toString()).emit("newRequest", {
+                userId: user._id,
+                name: user.name,
+                weight: parsedWeight
+            });
+        }
+
         return res.status(200).json({
             msg: "Update request sent successfully",
             pendingRequest: user.pendingRequest

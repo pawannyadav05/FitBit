@@ -20,6 +20,10 @@ const userSchema=new mongoose.Schema({
         type: Number,
         required: function() { return this.role === 'user'; }
     },
+    startWeight: {
+        type: Number,
+        default: null
+    },
     trainer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

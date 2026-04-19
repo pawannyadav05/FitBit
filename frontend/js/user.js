@@ -38,7 +38,7 @@ async function loadUser() {
                 "Authorization": `Bearer ${token}`
             }
         });
-        
+
         if (res.ok) {
             const dbUser = await res.json();
             Object.assign(user, dbUser);
@@ -59,8 +59,40 @@ async function loadUser() {
     document.getElementById("userName").innerText = userName;
     document.getElementById("userId").innerText = userEmail;
     document.getElementById("membershipStatus").innerText = membershipStatus;
+    document.getElementById("streak").innerText = streak;
 
-    QRCode.toCanvas(document.getElementById("qrCode"), userEmail);
+    const startWeight = user.startWeight || currentWeight;
+    
+    // Journey Progress & Insight Logic
+    const journeyBar = document.getElementById("journeyBar");
+    const journeyPercent = document.getElementById("journeyPercent");
+    const goalInsightText = document.getElementById("goalInsightText");
+
+    if (currentWeight && targetWeight && startWeight) {
+        const totalDist = Math.abs(startWeight - targetWeight);
+        const coveredDist = Math.abs(startWeight - currentWeight);
+        
+        let progress = 0;
+        if (totalDist > 0) {
+            progress = (coveredDist / totalDist) * 100;
+        } else if (currentWeight === targetWeight) {
+            progress = 100;
+        }
+
+        progress = Math.max(0, Math.min(100, progress));
+
+        if (journeyBar) journeyBar.style.width = progress + "%";
+        if (journeyPercent) journeyPercent.innerText = Math.round(progress) + "%";
+
+        const diff = Math.abs(currentWeight - targetWeight).toFixed(1);
+        if (coveredDist >= totalDist && totalDist > 0) {
+             if (goalInsightText) goalInsightText.innerHTML = `<strong style="color: var(--accent);">Goal Reached!</strong> 🏆`;
+        } else {
+             if (goalInsightText) goalInsightText.innerHTML = `You are <strong style="color: #fff;">${diff}kg</strong> away from your target goal.`;
+        }
+    } else {
+        if (goalInsightText) goalInsightText.innerText = "Set your target weight to track your journey.";
+    }
 
     document.getElementById("height").innerText = height ?? "Not set";
     document.getElementById("weight").innerText = currentWeight ?? "Not set";
@@ -71,10 +103,10 @@ async function loadUser() {
         const bmiValue = (currentWeight / ((height / 100) ** 2));
         const bmiStr = bmiValue.toFixed(2);
         document.getElementById("bmi").innerText = bmiStr;
-        
+
         let status = "";
         let color = "var(--text-dim)";
-        
+
         if (bmiValue < 18.5) {
             status = "Underweight";
             color = "#ffcc00"; // Yellow
@@ -88,7 +120,7 @@ async function loadUser() {
             status = "Obese";
             color = "#ff4444"; // Red
         }
-        
+
         const bmiStatusEl = document.getElementById("bmiStatus");
         bmiStatusEl.innerText = status;
         bmiStatusEl.style.color = color;
@@ -171,6 +203,16 @@ socket.on("receiveMessage", (data) => {
     }
 
     appendUserMessage(data);
+});
+
+socket.on("weightUpdated", (data) => {
+    console.log("Weight update received:", data);
+    loadUser();
+});
+
+socket.on("planUpdated", (data) => {
+    console.log("Plan update received:", data);
+    loadUser();
 });
 
 function appendUserMessage(data) {
@@ -263,7 +305,7 @@ async function requestUpdate() {
 
         alert("Weight update request sent successfully.");
         document.getElementById("newWeight").value = "";
-        
+
         // Reload user to update the streak instantly in UI
         loadUser();
     } catch (err) {

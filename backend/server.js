@@ -37,6 +37,12 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Attach io to req
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);

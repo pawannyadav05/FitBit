@@ -43,7 +43,7 @@ document.getElementById("trainerName").innerText = trainer.name;
 document.getElementById("trainerId").innerText = trainer.email;
 document.getElementById("status").innerText = trainer.status;
 
-QRCode.toCanvas(document.getElementById("qrCode"), trainer.email);
+
 
 const pendingContainer = document.getElementById("pendingContainer");
 
@@ -128,6 +128,17 @@ function renderUsersTable() {
     }
 
     clientsTableBody.innerHTML = allUsers.map((u, i) => {
+        let bmiStatus = "Not set";
+        let bmiClass = "";
+        
+        if (u.height && u.weight) {
+            const bmi = (u.weight / ((u.height / 100) ** 2));
+            if (bmi < 18.5) { bmiStatus = "Underweight"; bmiClass = "rgba(255,136,0,0.1); color: #ff8800; border: 1px solid rgba(255,136,0,0.2);"; }
+            else if (bmi < 25) { bmiStatus = "Normal"; bmiClass = "rgba(0,255,136,0.1); color: #00ff88; border: 1px solid rgba(0,255,136,0.2);"; }
+            else if (bmi < 30) { bmiStatus = "Overweight"; bmiClass = "rgba(255,136,0,0.1); color: #ff8800; border: 1px solid rgba(255,136,0,0.2);"; }
+            else { bmiStatus = "Obese"; bmiClass = "rgba(255,77,77,0.1); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.2);"; }
+        }
+
         return `
             <tr>
                 <td>
@@ -141,7 +152,11 @@ function renderUsersTable() {
                 </td>
                 <td>${u.weight} kg</td>
                 <td>${u.goalWeight || '-'} kg</td>
-                <td style="color: var(--accent); font-weight: 700;">Active</td>
+                <td>
+                    <span style="padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; ${bmiClass}">
+                        ${bmiStatus}
+                    </span>
+                </td>
                 <td><button class="btn-chat" onclick="openChat(${i})">Message</button></td>
             </tr>
         `;
@@ -172,9 +187,9 @@ function openChat(i) {
     document.getElementById("chatHeaderName").innerText = user.name;
     document.getElementById("chatHeaderAvatar").src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`;
     document.getElementById("chatInput").placeholder = `Message ${user.name.split(' ')[0]}...`;
-    
+
     document.getElementById("dashboardWrapper").classList.add("chat-open");
-    
+
     loadTrainerChatHistory(i);
 }
 
@@ -273,6 +288,12 @@ socket.on("receiveMessage", (data) => {
     }
 });
 
+socket.on("newRequest", (data) => {
+    console.log("New weight update request received:", data);
+    // Refresh trainer's client data to show the new pending request
+    loadTrainerUsers();
+});
+
 function appendTrainerMessage(data) {
     const box = document.getElementById("chatMessages");
     if (!box) return;
@@ -304,8 +325,27 @@ async function loadTrainerUsers() {
 
         allUsers = users;
 
+        // Team Success Logic: % of users who covered the required distance to their goal
+        const total = allUsers.length;
+        const reachedGoal = allUsers.filter(u => {
+            if (!u.goalWeight || !u.weight || !u.startWeight) return false;
+            const totalDist = Math.abs(u.startWeight - u.goalWeight);
+            const coveredDist = Math.abs(u.startWeight - u.weight);
+            return totalDist > 0 && coveredDist >= totalDist;
+        }).length;
+
+        const successPercent = total > 0 ? Math.round((reachedGoal / total) * 100) : 0;
+
+        const teamBar = document.getElementById("teamSuccessBar");
+        const teamPercent = document.getElementById("teamSuccessPercent");
+        const teamText = document.getElementById("teamSuccessText");
+
+        if (teamBar) teamBar.style.width = successPercent + "%";
+        if (teamPercent) teamPercent.innerText = successPercent + "%";
+        if (teamText) teamText.innerText = `${reachedGoal} of ${total} clients have reached their target!`;
+
         renderUsersTable();
-        renderPending(); 
+        renderPending();
 
     } catch (err) {
         console.error("Load trainer users error:", err);

@@ -27,6 +27,14 @@ router.post("/approve/:id", authMiddleware, async (req, res) => {
         }
 
         await user.save();
+        
+        // Notify user in real-time
+        if (req.io) {
+            req.io.to(user._id.toString()).emit("weightUpdated", {
+                weight: user.weight
+            });
+        }
+
         res.json({ msg: "Approved" });
     } catch (err) {
         console.error("Approve user error:", err);
@@ -72,6 +80,14 @@ router.post("/assign-plan/:userId", authMiddleware, async (req, res) => {
         user.workoutPlan = workoutPlan;
 
         await user.save();
+
+        // Notify user in real-time
+        if (req.io) {
+            req.io.to(user._id.toString()).emit("planUpdated", {
+                dietPlan: user.dietPlan,
+                workoutPlan: user.workoutPlan
+            });
+        }
 
         res.json({ msg: "Plan assigned successfully" });
     } catch (err) {
