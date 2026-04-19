@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitForge Pro Dashboard - User V2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --accent: #c6ff00;
+            --bg-main: #050505;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-dim: #888888;
+        }
+        body {
+            margin: 0; font-family: 'Inter', sans-serif; background-color: var(--bg-main);
+            color: var(--text-main); display: flex; justify-content: center; padding: 40px 20px;
+        }
+        .glass {
+            background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border); border-radius: 24px;
+        }
+        .dashboard-wrapper {
+            width: 100%; max-width: 1300px; display: grid;
+            grid-template-columns: 320px 1fr 350px; gap: 30px;
+        }
+        .header-area { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
+        .brand span { color: var(--accent); }
+        .profile-col { display: flex; flex-direction: column; gap: 20px; }
+        .profile-card { padding: 40px 30px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .avatar-ring { width: 130px; height: 130px; border-radius: 50%; padding: 4px; background: linear-gradient(135deg, var(--accent), #222); margin-bottom: 20px; }
+        .avatar-ring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #111; }
+        .profile-name { font-size: 1.6rem; font-weight: 700; margin: 0 0 5px 0; }
+        .profile-id { color: var(--text-dim); font-size: 0.95rem; margin: 0 0 25px 0; }
+        .status-badge { background: rgba(198, 255, 0, 0.1); color: var(--accent); padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(198, 255, 0, 0.2); }
+        
+        /* PROGRESS BAR INSTEAD OF QR */
+        .progress-section { margin-top: 30px; width: 100%; text-align: left; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-dim); }
+        .progress-container { height: 10px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; width: 68%; background: var(--accent); box-shadow: 0 0 15px var(--accent); border-radius: 20px; }
+
+        .stats-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .stat-card { padding: 30px; min-height: 180px; position: relative; }
+        .stat-title { color: var(--text-dim); font-size: 0.95rem; margin-bottom: 10px; }
+        .stat-value { font-size: 2.8rem; font-weight: 800; }
+        .stat-subtitle { color: var(--text-dim); font-size: 0.9rem; margin-top: 5px; }
+
+        .chat-col { display: none; } /* Hidden in preview, but logic exists in code */
+        .dashboard-wrapper.chat-open .chat-col { display: flex; }
+        .dashboard-wrapper.chat-open { grid-template-columns: 320px 1fr 350px; }
+        
+        .floating-chat-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #000; border: none; padding: 15px 25px; border-radius: 50px; font-weight: 700; cursor: pointer; box-shadow: 0 10px 20px rgba(198,255,0,0.2); }
+    </style>
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <div class="header-area">
+            <div class="brand">FIT<span>FORGE</span></div>
+            <button class="status-badge" style="background: transparent; color: #ff4d4d; border-color: rgba(255,77,77,0.3); cursor: pointer;">Logout</button>
+        </div>
+
+        <div class="profile-col">
+            <div class="glass profile-card">
+                <div class="avatar-ring"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"></div>
+                <h2 class="profile-name">Alex Johnson</h2>
+                <p class="profile-id">alex@fitforge.com</p>
+                <div class="status-badge">Active</div>
+
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>Journey Progress</span>
+                        <span style="color: var(--accent); font-weight: 700;">68%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.75rem; color: var(--text-dim);">You are <strong style="color: #fff;">4.2kg</strong> away from your target goal!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-col">
+            <div class="glass stat-card">
+                <div class="stat-title">🏋️ Current Weight</div>
+                <div class="stat-value">84.2 <span style="font-size: 1.2rem; color: var(--text-dim)">kg</span></div>
+                <div class="stat-subtitle">Logged today</div>
+            </div>
+            <div class="glass stat-card">
+                <div class="stat-title">⚖️ BMI</div>
+                <div class="stat-value">24.5</div>
+                <div class="stat-subtitle" style="color: #00ff88; font-weight: 700;">Normal Weight</div>
+            </div>
+            <div class="glass stat-card">
+                <div class="stat-title">🎯 Target Goal</div>
+                <div class="stat-value">80.0 <span style="font-size: 1.2rem; color: var(--text-dim)">kg</span></div>
+                <div class="stat-subtitle">Goal weight</div>
+            </div>
+            <div class="glass stat-card">
+                <div class="stat-title">🔥 Active Streak</div>
+                <div class="stat-value" style="color: var(--accent);">15 <span style="font-size: 1.2rem; color: var(--text-dim)">Days</span></div>
+                <div class="stat-subtitle">Keep it up!</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="floating-chat-btn">💬 Chat with Coach</button>
+</body>
+</html>
