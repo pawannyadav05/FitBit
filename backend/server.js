@@ -1,5 +1,7 @@
 import express from "express";
 import http from "http";
+import bcrypt from "bcryptjs";
+import User from "./models/User.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
@@ -32,7 +34,26 @@ const io = new Server(server, {
 
 console.log("Loaded environment variables and starting backend...");
 
-connectDB();
+connectDB().then(async () => {
+    try {
+        const existingAdmin = await User.findOne({ email: "admin@fitbit.com" });
+        if (!existingAdmin) {
+            const hashedPassword = await bcrypt.hash("admin123", 10);
+            await User.create({
+                name: "Super Admin",
+                email: "admin@fitbit.com",
+                password: hashedPassword,
+                role: "admin",
+                height: 180,
+                weight: 80,
+                goalWeight: 75
+            });
+            console.log("Seeded default admin user (admin@fitbit.com).");
+        }
+    } catch (err) {
+        console.error("Error seeding admin:", err);
+    }
+});
 
 app.use(cors());
 app.use(express.json());
