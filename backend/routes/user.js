@@ -11,8 +11,13 @@ router.get("/me", authMiddleware, async (req, res) => {
             return res.status(404).json({ msg: "User not found" });
         }
 
-        // Passive streak reset logic
+        if (user.startWeight == null && user.weight != null) {
+            user.startWeight = user.weight;
+            await user.save();
+        }
+
         if (user.lastActivityDate) {
+            // Compare calendar days so the streak does not depend on the exact hour.
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
@@ -59,6 +64,7 @@ router.post("/request-update", authMiddleware, async (req, res) => {
         today.setHours(0, 0, 0, 0);
 
         if (user.lastActivityDate) {
+            // A same-day update keeps the current streak, next day increments it.
             const lastActivity = new Date(user.lastActivityDate);
             lastActivity.setHours(0, 0, 0, 0);
             
@@ -78,7 +84,6 @@ router.post("/request-update", authMiddleware, async (req, res) => {
 
         await user.save();
 
-        // Notify trainer in real-time
         if (req.io && user.trainer) {
             req.io.to(user.trainer.toString()).emit("newRequest", {
                 userId: user._id,

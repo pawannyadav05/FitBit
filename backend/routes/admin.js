@@ -5,7 +5,6 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Middleware to check if user is admin
 const adminMiddleware = (req, res, next) => {
     if (req.user && req.user.role === "admin") {
         next();
@@ -16,7 +15,6 @@ const adminMiddleware = (req, res, next) => {
 
 router.use(authMiddleware, adminMiddleware);
 
-// GET /api/admin/users
 router.get("/users", async (req, res) => {
     try {
         const users = await User.find({ role: "user" }).populate("trainer", "name email");
@@ -32,7 +30,6 @@ router.get("/users", async (req, res) => {
     }
 });
 
-// GET /api/admin/trainers
 router.get("/trainers", async (req, res) => {
     try {
         const trainers = await User.find({ role: "trainer" });
@@ -43,7 +40,6 @@ router.get("/trainers", async (req, res) => {
     }
 });
 
-// POST /api/admin/assign
 router.post("/assign", async (req, res) => {
     try {
         const { userId, trainerId } = req.body;
@@ -64,7 +60,6 @@ router.post("/assign", async (req, res) => {
     }
 });
 
-// DELETE /api/admin/delete-user/:id
 router.delete("/delete-user/:id", async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
@@ -76,7 +71,6 @@ router.delete("/delete-user/:id", async (req, res) => {
     }
 });
 
-// POST /api/admin/create-trainer
 router.post("/create-trainer", async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -107,13 +101,11 @@ router.post("/create-trainer", async (req, res) => {
     }
 });
 
-// DELETE /api/admin/delete-trainer/:id
 router.delete("/delete-trainer/:id", async (req, res) => {
     try {
         const trainer = await User.findByIdAndDelete(req.params.id);
         if (!trainer) return res.status(404).json({ msg: "Trainer not found" });
         
-        // Unassign from users
         await User.updateMany({ trainer: req.params.id }, { $set: { trainer: null } });
 
         res.json({ msg: "Trainer deleted" });

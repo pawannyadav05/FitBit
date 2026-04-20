@@ -28,7 +28,6 @@ router.post("/approve/:id", authMiddleware, async (req, res) => {
 
         await user.save();
         
-        // Notify user in real-time
         if (req.io) {
             req.io.to(user._id.toString()).emit("weightUpdated", {
                 weight: user.weight
@@ -71,7 +70,6 @@ router.post("/assign-plan/:userId", authMiddleware, async (req, res) => {
             return res.status(404).json({ msg: "User not found" });
         }
 
-        // Verify that the user is assigned to this trainer
         if (user.trainer.toString() !== req.user.id) {
             return res.status(403).json({ msg: "Not authorized to assign plan to this user" });
         }
@@ -81,7 +79,6 @@ router.post("/assign-plan/:userId", authMiddleware, async (req, res) => {
 
         await user.save();
 
-        // Notify user in real-time
         if (req.io) {
             req.io.to(user._id.toString()).emit("planUpdated", {
                 dietPlan: user.dietPlan,

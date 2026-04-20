@@ -1,6 +1,6 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
-const API_BASE = "http://localhost:5001";
+// API_BASE is now defined globally in js/config.js
 const socket = io(API_BASE);
 
 if (!token) {
@@ -47,7 +47,6 @@ document.getElementById("status").innerText = trainer.status;
 
 const pendingContainer = document.getElementById("pendingContainer");
 
-// ✅ FIXED PENDING (from DB instead of dummy)
 function renderPending() {
     const pendingCount = document.getElementById("pendingCount");
     const pending = allUsers.filter(u => u.pendingRequest);
@@ -87,7 +86,7 @@ async function approveWeight(userId) {
     await fetch(`${API_BASE}/api/trainer/approve/${userId}`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",   // ✅ ADD THIS
+            "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
         }
     });
@@ -99,7 +98,7 @@ async function rejectWeight(userId) {
     await fetch(`${API_BASE}/api/trainer/reject/${userId}`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",   // ✅ ADD THIS
+            "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
         }
     });
@@ -114,7 +113,6 @@ const assignPlanSelect = document.getElementById("assignPlanSelect");
 function renderUsersTable() {
     clientCount.innerText = allUsers.length;
 
-    // Populate the Assign Plan Select dropdown
     assignPlanSelect.innerHTML = `<option value="">Select a Client...</option>` + 
         allUsers.map((u) => `<option value="${u._id}" style="background:#111;">${u.name}</option>`).join("");
 
@@ -282,7 +280,6 @@ socket.on("receiveMessage", (data) => {
 
     if (chatIndex === -1) return;
 
-    // Only append if the currently open chat is the one that sent the message
     if (currentChatIndex === chatIndex) {
         appendTrainerMessage(data);
     }
@@ -290,7 +287,6 @@ socket.on("receiveMessage", (data) => {
 
 socket.on("newRequest", (data) => {
     console.log("New weight update request received:", data);
-    // Refresh trainer's client data to show the new pending request
     loadTrainerUsers();
 });
 
@@ -325,7 +321,7 @@ async function loadTrainerUsers() {
 
         allUsers = users;
 
-        // Team Success Logic: % of users who covered the required distance to their goal
+        // Count clients who have already covered the full distance to their target.
         const total = allUsers.length;
         const reachedGoal = allUsers.filter(u => {
             if (!u.goalWeight || !u.weight || !u.startWeight) return false;

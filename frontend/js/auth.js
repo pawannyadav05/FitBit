@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5001/api/auth";
+const API_URL = `${API_BASE}/api/auth`;
 
 async function login() {
     const email = document.getElementById("email").value;

@@ -1,6 +1,6 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
-const API_BASE = "http://localhost:5001";
+// API_BASE is now defined globally in js/config.js
 
 if (!token) {
     window.location.href = "login.html";
@@ -22,16 +22,11 @@ function attachLogout() {
     });
 }
 
-// 🔥 REAL DATA ARRAYS
 let users = [];
 let trainers = [];
 
-// =====================
-// FETCH DATA
-// =====================
 async function loadData() {
     try {
-        // users
         const resUsers = await fetch(`${API_BASE}/api/admin/users`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -39,7 +34,6 @@ async function loadData() {
         const userData = await resUsers.json();
         if (resUsers.ok) users = userData;
 
-        // trainers
         const resTrainers = await fetch(`${API_BASE}/api/admin/trainers`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -47,7 +41,6 @@ async function loadData() {
         const trainerData = await resTrainers.json();
         if (resTrainers.ok) trainers = trainerData;
 
-        // Update Quick Stats
         document.getElementById("totalUsers").innerText = users.length;
         document.getElementById("activeTrainers").innerText = trainers.length;
 
@@ -60,9 +53,6 @@ async function loadData() {
     }
 }
 
-// =====================
-// USERS TABLE
-// =====================
 const userTableBody = document.getElementById("userTableBody");
 
 function getInitials(name) {
@@ -121,9 +111,6 @@ function renderUsers() {
     }).join("");
 }
 
-// =====================
-// ASSIGN TRAINER
-// =====================
 async function assignTrainer(userId, i) {
     const trainerId = document.getElementById(`trainer-${i}`).value;
 
@@ -154,9 +141,6 @@ async function assignTrainer(userId, i) {
     }
 }
 
-// =====================
-// DELETE USER
-// =====================
 async function deleteUser(userId) {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
@@ -180,9 +164,6 @@ async function deleteUser(userId) {
     }
 }
 
-// =====================
-// TRAINERS TABLE
-// =====================
 const trainerTableBody = document.getElementById("trainerTableBody");
 
 function renderTrainers() {
@@ -210,9 +191,6 @@ function renderTrainers() {
     }).join("");
 }
 
-// =====================
-// CREATE TRAINER
-// =====================
 function createTrainer() {
     const name = document.getElementById("trainerNameInput").value;
     const email = document.getElementById("trainerEmailInput").value;
@@ -249,9 +227,6 @@ function createTrainer() {
     });
 }
 
-// =====================
-// DELETE TRAINER
-// =====================
 async function deleteTrainer(trainerId) {
     if (!confirm("Are you sure you want to delete this trainer?")) return;
 
@@ -275,6 +250,5 @@ async function deleteTrainer(trainerId) {
     }
 }
 
-// INIT
 attachLogout();
 loadData();

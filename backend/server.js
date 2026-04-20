@@ -37,7 +37,6 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
-// Attach io to req
 app.use((req, res, next) => {
     req.io = io;
     next();

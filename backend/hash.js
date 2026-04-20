@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 
-// const password = "pAdmin2005";  // 🔥 change here
-const password = "pTrainer2005";  // 🔥 change here
+const password = "pTrainer2005";
 
 const run = async () => {
     const hash = await bcrypt.hash(password, 10);

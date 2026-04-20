@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5001";
+// API_BASE is now defined globally in js/config.js
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
 const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -52,31 +52,28 @@ async function loadUser() {
     const userEmail = user.email || "No email";
     const membershipStatus = user.membershipStatus || "Active";
     const height = user.height ?? null;
-    const currentWeight = user.weight ?? user.currentWeight ?? null;
-    const targetWeight = user.goalWeight ?? user.targetWeight ?? null;
-    const streak = user.streak ?? 0;
+    const currentWeight = Number(user.weight ?? user.currentWeight ?? 0);
+    const targetWeight = Number(user.goalWeight ?? user.targetWeight ?? 0);
+    const startWeight = Number(user.startWeight ?? currentWeight);
 
     document.getElementById("userName").innerText = userName;
     document.getElementById("userId").innerText = userEmail;
     document.getElementById("membershipStatus").innerText = membershipStatus;
+    const streak = user.streak ?? 0;
     document.getElementById("streak").innerText = streak;
-
-    const startWeight = user.startWeight || currentWeight;
     
-    // Journey Progress & Insight Logic
     const journeyBar = document.getElementById("journeyBar");
     const journeyPercent = document.getElementById("journeyPercent");
     const goalInsightText = document.getElementById("goalInsightText");
 
     if (currentWeight && targetWeight && startWeight) {
+        // Progress is based on how much of the start-to-goal gap has been covered.
         const totalDist = Math.abs(startWeight - targetWeight);
         const coveredDist = Math.abs(startWeight - currentWeight);
         
         let progress = 0;
         if (totalDist > 0) {
             progress = (coveredDist / totalDist) * 100;
-        } else if (currentWeight === targetWeight) {
-            progress = 100;
         }
 
         progress = Math.max(0, Math.min(100, progress));
@@ -85,7 +82,7 @@ async function loadUser() {
         if (journeyPercent) journeyPercent.innerText = Math.round(progress) + "%";
 
         const diff = Math.abs(currentWeight - targetWeight).toFixed(1);
-        if (coveredDist >= totalDist && totalDist > 0) {
+        if (progress >= 100) {
              if (goalInsightText) goalInsightText.innerHTML = `<strong style="color: var(--accent);">Goal Reached!</strong> 🏆`;
         } else {
              if (goalInsightText) goalInsightText.innerHTML = `You are <strong style="color: #fff;">${diff}kg</strong> away from your target goal.`;
@@ -109,16 +106,16 @@ async function loadUser() {
 
         if (bmiValue < 18.5) {
             status = "Underweight";
-            color = "#ffcc00"; // Yellow
+            color = "#ffcc00";
         } else if (bmiValue >= 18.5 && bmiValue < 25) {
             status = "Normal Weight";
-            color = "#00ff88"; // Green
+            color = "#00ff88";
         } else if (bmiValue >= 25 && bmiValue < 30) {
             status = "Overweight";
-            color = "#ff8800"; // Orange
+            color = "#ff8800";
         } else {
             status = "Obese";
-            color = "#ff4444"; // Red
+            color = "#ff4444";
         }
 
         const bmiStatusEl = document.getElementById("bmiStatus");
@@ -131,13 +128,13 @@ async function loadUser() {
     }
 
     if (currentWeight && targetWeight) {
+        // This older bar is still in the page for compatibility with the existing layout.
         const progress = Math.min((currentWeight / targetWeight) * 100, 100);
         document.getElementById("progressBar").style.width = progress + "%";
     } else {
         document.getElementById("progressBar").style.width = "0%";
     }
 
-    // Display Plans
     const dietPlan = user.dietPlan || "No diet plan assigned yet.";
     const workoutPlan = user.workoutPlan || "No workout plan assigned yet.";
 
@@ -285,7 +282,7 @@ async function requestUpdate() {
     }
 
     try {
-        const res = await fetch("http://localhost:5001/api/user/request-update", {
+        const res = await fetch(`${API_BASE}/api/user/request-update`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -306,7 +303,6 @@ async function requestUpdate() {
         alert("Weight update request sent successfully.");
         document.getElementById("newWeight").value = "";
 
-        // Reload user to update the streak instantly in UI
         loadUser();
     } catch (err) {
         console.error("Request update error:", err);
