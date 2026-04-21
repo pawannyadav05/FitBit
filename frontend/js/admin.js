@@ -6,10 +6,7 @@ if (!token) {
     window.location.href = "login.html";
 }
 
-if (role !== "admin") {
-    alert("Access Denied");
-    window.location.href = "login.html";
-}
+
 
 function logout() {
     localStorage.clear();

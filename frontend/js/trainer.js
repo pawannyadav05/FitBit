@@ -7,10 +7,7 @@ if (!token) {
     window.location.href = "login.html";
 }
 
-if (role !== "trainer") {
-    alert("Access Denied");
-    window.location.href = "login.html";
-}
+
 
 const storedTrainer = JSON.parse(localStorage.getItem("user"));
 
@@ -321,13 +318,11 @@ async function loadTrainerUsers() {
 
         allUsers = users;
 
-        // Count clients who have already covered the full distance to their target.
+        // Count clients who have exactly reached their target weight.
         const total = allUsers.length;
         const reachedGoal = allUsers.filter(u => {
-            if (!u.goalWeight || !u.weight || !u.startWeight) return false;
-            const totalDist = Math.abs(u.startWeight - u.goalWeight);
-            const coveredDist = Math.abs(u.startWeight - u.weight);
-            return totalDist > 0 && coveredDist >= totalDist;
+            if (!u.goalWeight || !u.weight) return false;
+            return Number(u.weight) === Number(u.goalWeight);
         }).length;
 
         const successPercent = total > 0 ? Math.round((reachedGoal / total) * 100) : 0;

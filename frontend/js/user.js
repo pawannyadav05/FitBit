@@ -11,11 +11,6 @@ if (!token) {
     window.location.href = "login.html";
 }
 
-if (role !== "user") {
-    alert("Access Denied");
-    window.location.href = "login.html";
-}
-
 if (user._id) {
     socket.emit("joinRoom", user._id);
 }
@@ -62,27 +57,11 @@ async function loadUser() {
     const streak = user.streak ?? 0;
     document.getElementById("streak").innerText = streak;
     
-    const journeyBar = document.getElementById("journeyBar");
-    const journeyPercent = document.getElementById("journeyPercent");
     const goalInsightText = document.getElementById("goalInsightText");
 
-    if (currentWeight && targetWeight && startWeight) {
-        // Progress is based on how much of the start-to-goal gap has been covered.
-        const totalDist = Math.abs(startWeight - targetWeight);
-        const coveredDist = Math.abs(startWeight - currentWeight);
-        
-        let progress = 0;
-        if (totalDist > 0) {
-            progress = (coveredDist / totalDist) * 100;
-        }
-
-        progress = Math.max(0, Math.min(100, progress));
-
-        if (journeyBar) journeyBar.style.width = progress + "%";
-        if (journeyPercent) journeyPercent.innerText = Math.round(progress) + "%";
-
+    if (currentWeight && targetWeight) {
         const diff = Math.abs(currentWeight - targetWeight).toFixed(1);
-        if (progress >= 100) {
+        if (Number(currentWeight) === Number(targetWeight)) {
              if (goalInsightText) goalInsightText.innerHTML = `<strong style="color: var(--accent);">Goal Reached!</strong> 🏆`;
         } else {
              if (goalInsightText) goalInsightText.innerHTML = `You are <strong style="color: #fff;">${diff}kg</strong> away from your target goal.`;
