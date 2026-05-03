@@ -53,4 +53,3 @@ FitForge is a high-performance, glassmorphic web application designed for person
 - **Obese:** > 30
 
 ---
-*Modernized by Antigravity AI*
