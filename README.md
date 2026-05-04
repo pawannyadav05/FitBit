@@ -24,7 +24,7 @@ The app uses a "Glassmorphic" design, giving it a modern, premium feel that keep
 
 ## 💻 The Tech Behind It
 We wanted the app to be fast and secure, so we used:
-*   **Frontend:** Clean Vanilla JS, HTML5, and CSS3. No heavy frameworks, just fast performance and beautiful Glassmorphism.
+*   **Frontend:** JS, HTML5, and CSS3. No heavy frameworks, just fast performance and beautiful Glassmorphism.
 *   **Backend:** Node.js & Express.
 *   **Database:** MongoDB (for flexible data storage).
 *   **Real-time:** Socket.io for that "instant" chat feel.
